@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbrhac66svoau"]
+
+[ext_resource type="Script" path="res://addons/CopperDC/copper_dc/scripts/debug_console.gd" id="1_fs6bc"]
+
+[node name="Debug Console" type="Panel"]
+self_modulate = Color(1, 1, 1, 0.392157)
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("1_fs6bc")
+
+[node name="Command Field" type="TextEdit" parent="."]
+layout_mode = 0
+offset_left = 6.0
+offset_top = 602.0
+offset_right = 1143.0
+offset_bottom = 638.0
+placeholder_text = "Enter command here..."
