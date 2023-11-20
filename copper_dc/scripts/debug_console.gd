@@ -61,7 +61,7 @@ func process_command(command):
 		DebugConsole.log(commandData.function.get_method())
 		return
 	var commandFunction = commandData.function.get_method() +  "("
-	
+	var currentString = ""
 	# Iterates through split list
 	for i in range(commandSplit.size()):
 		if i == 0: continue
@@ -79,12 +79,39 @@ func process_command(command):
 			commandFunction += commandSplit[i] + ","
 			currentParameter += 1
 		# Float parameter
-		if currentParameterObj.type == DebugCommand.ParameterType.Float:
+		elif currentParameterObj.type == DebugCommand.ParameterType.Float:
 			if !commandSplit[i].is_valid_float():
 				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be a float, but an incorrect value was passed.")
 				return
 			commandFunction += commandSplit[i] + ","
 			currentParameter += 1
+		# String parameter
+		elif currentParameterObj.type == DebugCommand.ParameterType.String:
+			var word = commandSplit[i]
+			if word.begins_with("\""):
+				if currentString == "":
+					DebugConsole.log_error("Cannot create a string within a string.")
+					return
+				elif word.ends_with("\""):
+					commandFunction += word + ","
+					currentParameter += 1
+				else:
+					currentString += word + " "
+			elif currentString != "":
+				if word.ends_with("\""):
+					currentString += word
+					commandFunction += currentString + ","
+					currentString = ""
+					currentParameter += 1
+				else:
+					currentString += word + " "
+			else:
+				commandFunction += "\"" + word + "\","
+				currentParameter += 1
+		# Other
+		else:
+			DebugConsole.log_error("Parameter " + currentParameterObj.name + " received an invalid value.")
+			return
 		
 	# Checks if all parameters are entered
 	if commandData.parameters.size() != currentParameter:
@@ -92,11 +119,11 @@ func process_command(command):
 		return
 		
 	commandFunction += ")"
-	
+	print(commandFunction)
 	var expression = Expression.new()
 	var error = expression.parse(commandFunction)
 	if error:
-		DebugConsole.log_error(error)
+		DebugConsole.log_error("Parsing error: " + error_string(error))
 		return
 
 	expression.execute([], commandData.functionInstance)
@@ -111,7 +138,7 @@ static func log(message):
 
 static func log_error(message):
 	# Add to log
-	(Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console").consoleLog.append("[color=red]"+message+"[/color]")
+	(Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console").consoleLog.append("[color=red]"+str(message)+"[/color]")
 	_update_log()
 	
 	# Print to Godot output

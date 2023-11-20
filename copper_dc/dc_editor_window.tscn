@@ -1,7 +1,0 @@
-[gd_scene format=3 uid="uid://cweh4r1c0lxu2"]
-
-[node name="Debug Console" type="VBoxContainer"]
-
-[node name="Title" type="Label" parent="."]
-layout_mode = 2
-text = "Debug Console"
