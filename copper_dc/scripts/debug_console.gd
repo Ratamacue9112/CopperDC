@@ -70,9 +70,18 @@ func process_command(command):
 			DebugConsole.log_error("Command \"" + commandData.id + "\" requires " + str(commandData.parameters.size()) + " parameters, but too many were given.")
 			return
 		var currentParameterObj: DebugCommand.Parameter = commandData.parameters[currentParameter]
+		
+		# Int parameter
 		if currentParameterObj.type == DebugCommand.ParameterType.Int:
 			if !commandSplit[i].is_valid_int():
 				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an integer, but an incorrect value was passed.")
+				return
+			commandFunction += commandSplit[i] + ","
+			currentParameter += 1
+		# Float parameter
+		if currentParameterObj.type == DebugCommand.ParameterType.Float:
+			if !commandSplit[i].is_valid_float():
+				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be a float, but an incorrect value was passed.")
 				return
 			commandFunction += commandSplit[i] + ","
 			currentParameter += 1
