@@ -108,6 +108,14 @@ func process_command(command):
 			else:
 				commandFunction += "\"" + word + "\","
 				currentParameter += 1
+		# Bool parameter
+		elif currentParameterObj.type == DebugCommand.ParameterType.Bool:
+			var value = commandSplit[i].to_lower()
+			if value == "true" && commandSplit[i].to_lower() == "false":
+				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an bool, but an incorrect value was passed.")
+				return
+			commandFunction += value + ","
+			currentParameter += 1
 		# Other
 		else:
 			DebugConsole.log_error("Parameter " + currentParameterObj.name + " received an invalid value.")
@@ -119,7 +127,7 @@ func process_command(command):
 		return
 		
 	commandFunction += ")"
-	print(commandFunction)
+	#print(commandFunction)
 	var expression = Expression.new()
 	var error = expression.parse(commandFunction)
 	if error:

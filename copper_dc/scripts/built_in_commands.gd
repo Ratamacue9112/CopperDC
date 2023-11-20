@@ -16,6 +16,14 @@ func init():
 		DebugCommand.Parameter.new("x", DebugCommand.ParameterType.String),
 		DebugCommand.Parameter.new("y", DebugCommand.ParameterType.String),
 	]))
+	# Compare bool
+	DebugConsole.add_command(DebugCommand.new("compare", _compare, self, [
+		DebugCommand.Parameter.new("x", DebugCommand.ParameterType.Bool),
+		DebugCommand.Parameter.new("x", DebugCommand.ParameterType.Bool),
+	]))
 
 func _add(x, y):
 	DebugConsole.log(x + y)
+
+func _compare(x, y):
+	DebugConsole.log(x == y)

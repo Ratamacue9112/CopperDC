@@ -20,5 +20,5 @@ class Parameter:
 		self.type = type
 	
 enum ParameterType {
-	Int, Float, String
+	Int, Float, String, Bool
 }
