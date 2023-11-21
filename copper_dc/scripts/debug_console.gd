@@ -85,6 +85,7 @@ func process_command(command):
 	var commandData = commands[commandSplit[0]]
 	var currentParameter = 0
 	
+	# Checks that function is not lambda
 	if commandData.function.get_method() == "<anonymous lambda>":
 		DebugConsole.log_error("Command function must be named.")
 		DebugConsole.log(commandData.function.get_method())
@@ -152,9 +153,19 @@ func process_command(command):
 				return
 			commandFunction += value + ","
 			currentParameter += 1
+		# Options parameter
+		elif currentParameterObj.type == DebugCommand.ParameterType.Options:
+			if currentParameterObj.options.is_empty():
+				DebugConsole.log_error("Parameter \"" + currentParameterObj.name + "\" is meant to have options, but none were set.")
+				return
+			if !currentParameterObj.options.has(commandSplit[i]):
+				DebugConsole.log_error("\"" + commandSplit[i] + "\"" + " is not a valid option for parameter \"" + currentParameterObj.name + "\".")
+				return
+			commandFunction += "\"" + commandSplit[i] + "\","
+			currentParameter += 1
 		# Other
 		else:
-			DebugConsole.log_error("Parameter " + currentParameterObj.name + " received an invalid value.")
+			DebugConsole.log_error("Parameter \"" + currentParameterObj.name + "\" received an invalid value.")
 			return
 		
 	# Checks if all parameters are entered

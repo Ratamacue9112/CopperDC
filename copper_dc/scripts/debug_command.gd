@@ -14,11 +14,13 @@ func _init(id:String, function:Callable, functionInstance: Object, parameters:Ar
 class Parameter:
 	var name: String
 	var type: ParameterType
+	var options: Array
 	
-	func _init(name:String, type:ParameterType):
+	func _init(name:String, type:ParameterType, options:Array=[]):
 		self.name = name
 		self.type = type
-	
+		self.options = options
+
 enum ParameterType {
-	Int, Float, String, Bool
+	Int, Float, String, Bool, Options
 }
