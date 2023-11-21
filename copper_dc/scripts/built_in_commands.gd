@@ -19,7 +19,7 @@ func init():
 	# Compare bool
 	DebugConsole.add_command("compare", _compare, self, [
 		DebugCommand.Parameter.new("x", DebugCommand.ParameterType.Bool),
-		DebugCommand.Parameter.new("x", DebugCommand.ParameterType.Bool),
+		DebugCommand.Parameter.new("y", DebugCommand.ParameterType.Bool),
 	])
 
 func _add(x, y):

@@ -34,16 +34,16 @@ They parameter types available are:
 Lets say we want to create a command that gets a substring within a string. We have a script attached to a child node of our main menu. In that script, type:<br><br>
 ```
 func _ready():
-    DebugConsole.add_command("substring", substring_function, self, [
-        DebugCommand.Parameter.new("original", DebugCommand.ParameterType.String),
-        DebugCommand.Parameter.new("from", DebugCommand.ParameterType.Int),
-        DebugCommand.Parameter.new("length", DebugCommand.ParameterType.Int)
-    ])
+	DebugConsole.add_command("substring", substring_function, self, [
+		DebugCommand.Parameter.new("original", DebugCommand.ParameterType.String),
+		DebugCommand.Parameter.new("from", DebugCommand.ParameterType.Int),
+		DebugCommand.Parameter.new("length", DebugCommand.ParameterType.Int)
+	])
 ```
 Then below that create `substring_function`:
 ```
 func substring_function(original, from, length):
-    DebugConsole.log(original.substr(from, length))
+	DebugConsole.log(original.substr(from, length))
 ```
 Now if you start the game, open the console and type:
 `substring "a b cde" 2 4`.
@@ -51,7 +51,6 @@ The console will output `b cd`, the string that starts at index 2 and lasts 4 ch
 
 ## Future plans
 I plan to implement these in future updates:
-- Command hints
-- Some built-in functions
+- ~~Command hints~~
 - "Choose from options" parameters
 - Custom monitors (where it currently has FPS and process time)

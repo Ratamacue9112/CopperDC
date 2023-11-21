@@ -5,6 +5,11 @@ var consoleLog = []
 var commands = {}
 
 @onready var commandField = $"Command Field"
+
+@onready var commandHintsPanel = $"Command Hints Panel"
+@onready var commandHintsParent = $"Command Hints"
+@onready var commandHintsLabel = $"Command Hints/RichTextLabel"
+
 @onready var stats = $"Stats"
 @onready var logField = $Log
 @onready var scrollBar = logField.get_v_scroll_bar()
@@ -29,7 +34,7 @@ func _input(event):
 	# Open debug
 	if !visible and event.is_action_pressed("open_debug"):
 		visible = true
-		
+		_on_command_field_text_changed(commandField.text)
 		# This is stupid but it works
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
@@ -41,6 +46,33 @@ func _input(event):
 		DebugConsole.log("> " + commandField.text)
 		process_command(commandField.text)
 		commandField.clear()
+
+func _on_command_field_text_changed(new_text):
+	var commandHints = []
+	var commandID = new_text.split(" ")[0]
+	var sortedCommands = commands.keys()
+	sortedCommands.sort()
+	for command in sortedCommands:
+		if command.begins_with(commandID):
+			commandHints.append(commands[command])
+			
+	_update_command_hints(commandHints)
+	
+func _update_command_hints(commandList:Array):
+	if !commandList.is_empty():
+		commandHintsParent.visible = true
+		commandHintsLabel.visible = true
+		commandHintsPanel.visible = true
+		commandHintsLabel.text = ""
+		for command in commandList:
+			commandHintsLabel.text += command.id
+			for parameter in command.parameters:
+				commandHintsLabel.text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
+			commandHintsLabel.text += "\n"
+	else:
+		commandHintsParent.visible = false
+		commandHintsLabel.visible = false
+		commandHintsPanel.visible = false
 
 func process_command(command):
 	# Splits command
