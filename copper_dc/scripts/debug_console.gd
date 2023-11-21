@@ -9,9 +9,6 @@ var commands = {}
 @onready var logField = $Log
 @onready var scrollBar = logField.get_v_scroll_bar()
 
-func _add(x, y):
-	DebugConsole.log(x + y)
-
 func _ready():
 	visible = false
 	scrollBar.connect("changed", _on_scrollbar_changed)
@@ -89,12 +86,19 @@ func process_command(command):
 		elif currentParameterObj.type == DebugCommand.ParameterType.String:
 			var word = commandSplit[i]
 			if word.begins_with("\""):
-				if currentString == "":
+				if word.ends_with("\""):
+					if word == "\"":
+						if currentString == "":
+							currentString += "\" "
+						else:
+							commandFunction +=  currentString + "\","
+							currentParameter += 1
+					else:
+						commandFunction += word + ","
+						currentParameter += 1
+				elif currentString != "":
 					DebugConsole.log_error("Cannot create a string within a string.")
 					return
-				elif word.ends_with("\""):
-					commandFunction += word + ","
-					currentParameter += 1
 				else:
 					currentString += word + " "
 			elif currentString != "":
@@ -127,7 +131,7 @@ func process_command(command):
 		return
 		
 	commandFunction += ")"
-	#print(commandFunction)
+
 	var expression = Expression.new()
 	var error = expression.parse(commandFunction)
 	if error:
@@ -138,7 +142,7 @@ func process_command(command):
 
 static func log(message):
 	# Add to log
-	get_log().consoleLog.append(message)
+	get_console().consoleLog.append(message)
 	_update_log()
 	
 	# Print to Godot output
@@ -146,20 +150,23 @@ static func log(message):
 
 static func log_error(message):
 	# Add to log
-	(Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console").consoleLog.append("[color=red]"+str(message)+"[/color]")
+	get_console().consoleLog.append("[color=red]"+str(message)+"[/color]")
 	_update_log()
 	
 	# Print to Godot output
 	printerr(str(message))
 
 static func clear_log():
-	get_log().consoleLog.clear()
+	get_console().consoleLog.clear()
 	_update_log()
 
-static func add_command(command:DebugCommand):
-	get_log().commands[command.id] = command
+static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[]):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters)
 
-static func get_log() -> CanvasLayer:
+static func add_command_obj(command:DebugCommand):
+	get_console().commands[command.id] = command
+
+static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
 
 static func _update_log():
