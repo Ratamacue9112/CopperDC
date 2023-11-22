@@ -9,6 +9,8 @@ var commands = {}
 @onready var commandHintsPanel = $"Command Hints Panel"
 @onready var commandHintsParent = $"Command Hints"
 @onready var commandHintsLabel = $"Command Hints/RichTextLabel"
+@onready var commandHintHeader = $"Command Hint Header"
+@onready var commandHintHeaderLabel = $"Command Hint Header/RichTextLabel"
 
 @onready var stats = $"Stats"
 @onready var logField = $Log
@@ -49,30 +51,66 @@ func _input(event):
 
 func _on_command_field_text_changed(new_text):
 	var commandHints = []
-	var commandID = new_text.split(" ")[0]
-	var sortedCommands = commands.keys()
-	sortedCommands.sort()
-	for command in sortedCommands:
-		if command.begins_with(commandID):
-			commandHints.append(commands[command])
-			
-	_update_command_hints(commandHints)
-	
-func _update_command_hints(commandList:Array):
-	if !commandList.is_empty():
+	var commandSplit = new_text.split(" ")
+	var commandID = commandSplit[0]
+	if commandSplit.size() > 1 and commands.keys().has(commandID):
 		commandHintsParent.visible = true
 		commandHintsLabel.visible = true
 		commandHintsPanel.visible = true
+		commandHintHeader.visible = true
 		commandHintsLabel.text = ""
-		for command in commandList:
-			commandHintsLabel.text += command.id
-			for parameter in command.parameters:
-				commandHintsLabel.text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
-			commandHintsLabel.text += "\n"
+		
+		# Get parameters filled
+		var parameterCount = 0
+		var readingString = false
+		for word in commandSplit:
+			if word.begins_with("\""):
+				if !readingString: parameterCount += 1
+				if word != "\"":
+					if !word.ends_with("\""):
+						readingString = true
+				else:
+					readingString = !readingString
+			elif word.ends_with("\""):
+				readingString = false
+			else:
+				if !readingString: parameterCount += 1
+		parameterCount -= 2
+		commandHintHeaderLabel.text = _get_parameter_text(commands[commandID], parameterCount)
+		if parameterCount < commands[commandID].parameters.size():
+			var options = commands[commandID].parameters[parameterCount].options
+			if !options.is_empty():
+				for option in options:
+					if str(option).begins_with(commandSplit[commandSplit.size() - 1]):
+						commandHintsLabel.text += str(option) + "\n"
 	else:
-		commandHintsParent.visible = false
-		commandHintsLabel.visible = false
-		commandHintsPanel.visible = false
+		var sortedCommands = commands.keys()
+		sortedCommands.sort()
+		for command in sortedCommands:
+			if command.begins_with(commandID):
+				commandHints.append(commands[command])
+		commandHintHeader.visible = false
+		if !commandHints.is_empty():
+			commandHintsParent.visible = true
+			commandHintsLabel.visible = true
+			commandHintsPanel.visible = true
+			commandHintsLabel.text = ""
+			for command in commandHints:
+				commandHintsLabel.text += _get_parameter_text(command) + "\n"
+		else:
+			commandHintsParent.visible = false
+			commandHintsLabel.visible = false
+			commandHintsPanel.visible = false
+
+func _get_parameter_text(command, currentParameter=-1) -> String:
+	var text: String = command.id
+	var isHeader = currentParameter < command.parameters.size() and currentParameter >= 0
+	for parameter in command.parameters:
+		if isHeader and parameter.name == command.parameters[currentParameter].name:
+			text += " [b]<" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">[/b]"
+		else:
+			text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
+	return text
 
 func process_command(command):
 	# Splits command

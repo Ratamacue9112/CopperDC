@@ -25,6 +25,24 @@ offset_bottom = 638.0
 placeholder_text = "Enter command here..."
 context_menu_enabled = false
 
+[node name="Command Hint Header" type="Panel" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0.835294)
+offset_left = 6.0
+offset_top = 426.0
+offset_right = 1139.0
+offset_bottom = 453.0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Command Hint Header"]
+layout_mode = 0
+offset_left = 3.0
+offset_right = 1126.0
+offset_bottom = 27.0
+bbcode_enabled = true
+fit_content = true
+scroll_following = true
+autowrap_mode = 0
+
 [node name="Command Hints Panel" type="Panel" parent="."]
 visible = false
 modulate = Color(1, 1, 1, 0.752941)
@@ -34,7 +52,6 @@ offset_right = 1139.0
 offset_bottom = 601.0
 
 [node name="Command Hints" type="ScrollContainer" parent="."]
-visible = false
 offset_left = 14.0
 offset_top = 459.0
 offset_right = 1138.0
@@ -67,11 +84,5 @@ bbcode_enabled = true
 fit_content = true
 scroll_following = true
 autowrap_mode = 0
-
-[node name="Control" type="Control" parent="."]
-layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
 
 [connection signal="text_changed" from="Command Field" to="." method="_on_command_field_text_changed"]

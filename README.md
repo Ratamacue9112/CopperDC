@@ -15,7 +15,7 @@ CopperDC includes an in-game debug log. Note that Godot's `print()` and `printer
 ## Creating commands
 First, create a script that will run on game startup. For example, this could be done by attaching the script to a node in the main menu.
 Then, in that scripts ready function, you can instantiate your commands. Commands are created like this: <br><br>
-`DebugConsole.add_command(id: String, function: Callable, functionInstance: Object, parameters: Array=[])`<br><br>
+`DebugConsole.add_command(id: String, function: Callable, functionInstance: Object, parameters: Array = [])`<br><br>
 - **id**: The name of the command. This will be the first word of the command.
 - **function**: The function your command will run. Lambda functions do not work.
 - **functionInstance**: The instance your function will be called on. Almost always set to `self`.
@@ -23,12 +23,13 @@ Then, in that scripts ready function, you can instantiate your commands. Command
 
 ## Command parameters
 Parameters are created like this:<br><br>
-`DebugCommand.Parameter.new(name: String, type: DebugCommand.ParameterType)`<br><br>
+`DebugCommand.Parameter.new(name: String, type: DebugCommand.ParameterType, options: Array = [])`<br><br>
 They parameter types available are:
 - **Int**: A whole number
 - **Float**: Any number, including decimals
 - **String**: Text. Can be a single word, or multiple words wrapped in double quotes.
 - **Bool**: A condition. Can be `true` or `false` (not case sensitive).
+- **Options**: Allows the user to select from a list. For this you must put an array in the `options` parameter. If you fill in the `options` parameter on other parameter types, it will show up in the hints section, but will not restrict the options, more acting like suggestions.
 
 ## Example
 Lets say we want to create a command that gets a substring within a string. We have a script attached to a child node of our main menu. In that script, type:<br><br>
@@ -52,5 +53,5 @@ The console will output `b cd`, the string that starts at index 2 and lasts 4 ch
 ## Future plans
 I plan to implement these in future updates:
 - ~~Command hints~~
-- "Choose from options" parameters
+- ~~"Choose from options" parameters~~
 - Custom monitors (where it currently has FPS and process time)
