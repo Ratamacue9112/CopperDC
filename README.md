@@ -50,8 +50,14 @@ Now if you start the game, open the console and type:
 `substring "a b cde" 2 4`.
 The console will output `b cd`, the string that starts at index 2 and lasts 4 characters.
 
+## Custom monitors
+By default, when you open the debug console, in the upper left corner, a display shows the current FPS and process time. You can add custom monitors by running `DebugConsole.add_monitor(name)`, probably in the same scripts you instatiate commands in. By default, the monitor will show "unset". You can update the monitor by running `DebugConsole.add_monitor(name, value)`.
+
+## Customising the console
+You can customise the debug console's layout simply by editing the `addons/copper_dc/debug_console.tscn` file. Just don't change any signals, node names or delete anything, otherwise you will run into errors.
+
 ## Future plans
 I plan to implement these in future updates:
 - ~~Command hints~~
 - ~~"Choose from options" parameters~~
-- Custom monitors (where it currently has FPS and process time)
+- ~~Custom monitors (where it currently has FPS and process time)~~

@@ -3,6 +3,7 @@ class_name DebugConsole
 
 var consoleLog = []
 var commands = {}
+var monitors = {}
 
 @onready var commandField = $"Command Field"
 
@@ -29,7 +30,13 @@ func _on_scrollbar_changed():
 
 func _process(delta):
 	if visible:
-		stats.text = "FPS: " + str(Performance.get_monitor(Performance.TIME_FPS))
+		stats.text = ""
+		for monitorName in monitors:
+			var monitorValue = monitors[monitorName]
+			if monitorValue == null: monitorValue = "unset"
+			else: monitorValue = str(monitorValue)
+			stats.text += monitorName + ": " + monitorValue + "\n"
+		stats.text += "FPS: " + str(Performance.get_monitor(Performance.TIME_FPS))
 		stats.text += "\nProcess Time: " + str(snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
 
 func _input(event):
@@ -246,6 +253,18 @@ static func add_command(id:String, function:Callable, functionInstance:Object, p
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
+
+static func add_monitor(name):
+	if get_console().monitors.keys().has(name):
+		DebugConsole.log_error("Monitor " + name + " already exists.")
+	else:
+		get_console().monitors[name] = null
+
+static func update_monitor(name, value):
+	if !get_console().monitors.keys().has(name):
+		DebugConsole.log_error("Monitor " + name + " does not exist.")
+	else:
+		get_console().monitors[name] = value
 
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
