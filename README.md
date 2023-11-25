@@ -2,7 +2,7 @@
 A in-game debug console for Godot. This makes testing in a build much easier. For example, if you want to play a certain level in a build, you could create a command to take you there without having to play through the game.
 
 ## Setup
-1. Download the repository
+1. Download the latest release
 2. Place it the addons folder in your project (if you don't have one make one)
 3. Go to Edit > Project Settings > Plugins and enable the plugin
 4. Click the input map and create a new action called "open_debug" (it has to be this exactly)
