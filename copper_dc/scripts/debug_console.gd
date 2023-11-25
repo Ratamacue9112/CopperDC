@@ -251,6 +251,11 @@ static func clear_log():
 static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[]):
 	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters)
 
+static func add_setvar_command(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, [
+		DebugCommand.Parameter.new("value", type)
+	])
+
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 
