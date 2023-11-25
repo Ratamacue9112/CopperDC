@@ -117,6 +117,11 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 			text += " [b]<" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">[/b]"
 		else:
 			text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
+		if command.getFunction != null:
+			#print(typeof(command.getFunction))
+			var value = command.getFunction.call()
+			if value != null:
+				text += " === " + str(value)
 	return text
 
 func process_command(command):
@@ -248,13 +253,13 @@ static func clear_log():
 	get_console().consoleLog.clear()
 	_update_log()
 
-static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[]):
-	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters)
+static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[], getFunction=null):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters, getFunction)
 
-static func add_setvar_command(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType):
+static func add_setvar_command(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType, getFunction=null):
 	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, [
 		DebugCommand.Parameter.new("value", type)
-	])
+	], getFunction)
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
