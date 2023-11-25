@@ -73,22 +73,17 @@ offset_bottom = 410.0
 [node name="Log" type="ScrollContainer" parent="."]
 self_modulate = Color(1, 1, 1, 0.552941)
 offset_left = 390.0
-offset_top = 15.0
-offset_right = 1128.0
-offset_bottom = 407.0
-size_flags_horizontal = 3
+offset_top = 10.0
+offset_right = 1139.0
+offset_bottom = 410.0
 horizontal_scroll_mode = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="Log"]
-layout_mode = 2
-size_flags_horizontal = 3
-
-[node name="Log Content" type="RichTextLabel" parent="Log/MarginContainer"]
+[node name="Log Content" type="RichTextLabel" parent="Log"]
 layout_mode = 2
 bbcode_enabled = true
-text = "weriutgerfuweofuwhfuoiwhfwiurfghweiurgweoriugweriuhwefiuhwefiuwehrgfiuwehrfiuwerhfiuwerhfiweurhfiwuerhf"
 fit_content = true
 scroll_following = true
+autowrap_mode = 0
 
 [node name="Mini Log" type="ScrollContainer" parent="."]
 visible = false
@@ -111,6 +106,8 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 bbcode_enabled = true
 fit_content = true
+scroll_active = false
 scroll_following = true
+autowrap_mode = 0
 
 [connection signal="text_changed" from="Command Field" to="." method="_on_command_field_text_changed"]

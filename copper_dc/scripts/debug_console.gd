@@ -202,7 +202,7 @@ func process_command(command):
 		# Bool parameter
 		elif currentParameterObj.type == DebugCommand.ParameterType.Bool:
 			var value = commandSplit[i].to_lower()
-			if value != "true" or value != "false":
+			if value != "true" and value != "false":
 				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an bool, but an incorrect value was passed.")
 				return
 			commandFunction += value + ","
@@ -300,11 +300,15 @@ static func show_console():
 		else:
 			child.visible = false
 
+static func setup_cfg():
+	DirAccess.make_dir_absolute("user://cfg")
+	#var file = FileAccess.open("user://cfg/autoexec.cfg", FileAccess.WRITE)
+
 static func _update_log():
 	var console = get_console()
 	var logText = ""
 	for line in console.consoleLog:
 		logText += str(line) + "\n"
 	
-	console.get_node("Log/Log Content").text = logText
+	console.get_node("Log/MarginContainer/Log Content").text = logText
 	console.get_node("Mini Log/MarginContainer/Log Content").text = "[right]" + logText
