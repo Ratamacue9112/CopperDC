@@ -9,7 +9,7 @@ func init():
 	)
 	
 	# Show stats
-	DebugConsole.add_setvar_command(
+	DebugConsole.add_command_setvar(
 		"show_stats", 
 		_show_stats, 
 		self, 
@@ -18,7 +18,7 @@ func init():
 	)
 	
 	# Show log
-	DebugConsole.add_setvar_command(
+	DebugConsole.add_command_setvar(
 		"show_log", 
 		_show_log, 
 		self, 
