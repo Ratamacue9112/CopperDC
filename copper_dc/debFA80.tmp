@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://dbrhac66svoau"]
+
+[ext_resource type="Script" path="res://addons/copper_dc/scripts/debug_console.gd" id="1_fs6bc"]
+
+[node name="Debug Console" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_fs6bc")
+
+[node name="Panel" type="Panel" parent="."]
+self_modulate = Color(1, 1, 1, 0.498039)
+offset_right = 1152.0
+offset_bottom = 648.0
+
+[node name="Stats" type="Label" parent="."]
+offset_left = 17.0
+offset_top = 11.0
+offset_right = 261.0
+offset_bottom = 416.0
+
+[node name="Command Field" type="LineEdit" parent="."]
+offset_left = 6.0
+offset_top = 602.0
+offset_right = 1143.0
+offset_bottom = 638.0
+placeholder_text = "Enter command here..."
+context_menu_enabled = false
+
+[node name="Command Hint Header" type="Panel" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0.835294)
+offset_left = 6.0
+offset_top = 426.0
+offset_right = 1139.0
+offset_bottom = 453.0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Command Hint Header"]
+layout_mode = 0
+offset_left = 3.0
+offset_right = 1126.0
+offset_bottom = 27.0
+bbcode_enabled = true
+fit_content = true
+scroll_following = true
+autowrap_mode = 0
+
+[node name="Command Hints Panel" type="Panel" parent="."]
+visible = false
+modulate = Color(1, 1, 1, 0.752941)
+offset_left = 6.0
+offset_top = 453.0
+offset_right = 1139.0
+offset_bottom = 601.0
+
+[node name="Command Hints" type="ScrollContainer" parent="."]
+offset_left = 14.0
+offset_top = 459.0
+offset_right = 1138.0
+offset_bottom = 594.0
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Command Hints"]
+layout_mode = 2
+fit_content = true
+scroll_following = true
+autowrap_mode = 0
+
+[node name="Log Panel" type="Panel" parent="."]
+self_modulate = Color(1, 1, 1, 0.478431)
+offset_left = 381.0
+offset_top = 10.0
+offset_right = 1139.0
+offset_bottom = 410.0
+
+[node name="Log" type="ScrollContainer" parent="."]
+self_modulate = Color(1, 1, 1, 0.552941)
+offset_left = 390.0
+offset_top = 10.0
+offset_right = 1139.0
+offset_bottom = 410.0
+horizontal_scroll_mode = 0
+
+[node name="Log Content" type="RichTextLabel" parent="Log"]
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_following = true
+autowrap_mode = 0
+
+[connection signal="text_changed" from="Command Field" to="." method="_on_command_field_text_changed"]

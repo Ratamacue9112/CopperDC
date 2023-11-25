@@ -5,6 +5,8 @@ var consoleLog = []
 var commands = {}
 var monitors = {}
 
+var showStats = false
+
 @onready var commandField = $"Command Field"
 
 @onready var commandHintsPanel = $"Command Hints Panel"
@@ -18,7 +20,7 @@ var monitors = {}
 @onready var scrollBar = logField.get_v_scroll_bar()
 
 func _ready():
-	visible = false
+	hide_console()
 	scrollBar.connect("changed", _on_scrollbar_changed)
 	
 	# Register built-in commands
@@ -28,7 +30,7 @@ func _on_scrollbar_changed():
 	logField.scroll_vertical = scrollBar.max_value
 
 func _process(delta):
-	if visible:
+	if stats.visible:
 		stats.text = ""
 		for monitorName in monitors:
 			var monitorValue = monitors[monitorName]
@@ -40,15 +42,15 @@ func _process(delta):
 
 func _input(event):
 	# Open debug
-	if !visible and event.is_action_pressed("open_debug"):
-		visible = true
+	if !commandField.visible and event.is_action_pressed("open_debug"):
+		show_console()
 		_on_command_field_text_changed(commandField.text)
 		# This is stupid but it works
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
 	# Close debug
 	elif visible and event.is_action_pressed("ui_cancel"):
-		visible = false
+		hide_console(showStats)
 	# Enter command
 	elif visible and event.is_action_pressed("ui_text_submit"):
 		DebugConsole.log("> " + commandField.text)
@@ -277,6 +279,15 @@ static func update_monitor(name, value):
 
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
+
+static func hide_console(hideStats=false):
+	for child in get_console().get_children():
+		if !hideStats or child.name != "Stats":
+			child.visible = false
+
+static func show_console():
+	for child in get_console().get_children():
+		child.visible = true
 
 static func _update_log():
 	var root = (Engine.get_main_loop() as SceneTree).root
