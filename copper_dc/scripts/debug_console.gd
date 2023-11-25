@@ -22,7 +22,6 @@ func _ready():
 	scrollBar.connect("changed", _on_scrollbar_changed)
 	
 	# Register built-in commands
-	commands["clear"] = DebugCommand.new("clear", clear_log, self)
 	_BuiltInCommands.new().init()
 
 func _on_scrollbar_changed():

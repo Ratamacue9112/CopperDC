@@ -1,4 +1,4 @@
 class_name _BuiltInCommands
 
 func init():
-	pass
+	DebugConsole.add_command("clear", DebugConsole.clear_log, DebugConsole)
