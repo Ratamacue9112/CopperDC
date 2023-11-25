@@ -6,6 +6,7 @@ var commands = {}
 var monitors = {}
 
 var showStats = false
+var showMiniLog = false
 
 @onready var commandField = $"Command Field"
 
@@ -16,18 +17,20 @@ var showStats = false
 @onready var commandHintHeaderLabel = $"Command Hint Header/RichTextLabel"
 
 @onready var stats = $"Stats"
+@onready var miniLog = $"Mini Log"
 @onready var logField = $Log
-@onready var scrollBar = logField.get_v_scroll_bar()
+@onready var logScrollBar = logField.get_v_scroll_bar()
+@onready var miniLogScrollBar = miniLog.get_v_scroll_bar()
 
 func _ready():
 	hide_console()
-	scrollBar.connect("changed", _on_scrollbar_changed)
+	logScrollBar.connect("changed", _on_scrollbar_changed)
 	
 	# Register built-in commands
 	_BuiltInCommands.new().init()
 
 func _on_scrollbar_changed():
-	logField.scroll_vertical = scrollBar.max_value
+	logField.scroll_vertical = logScrollBar.max_value
 
 func _process(delta):
 	if stats.visible:
@@ -50,7 +53,7 @@ func _input(event):
 		commandField.grab_focus()
 	# Close debug
 	elif visible and event.is_action_pressed("ui_cancel"):
-		hide_console(showStats)
+		hide_console(showStats, showMiniLog)
 	# Enter command
 	elif visible and event.is_action_pressed("ui_text_submit"):
 		DebugConsole.log("> " + commandField.text)
@@ -199,7 +202,7 @@ func process_command(command):
 		# Bool parameter
 		elif currentParameterObj.type == DebugCommand.ParameterType.Bool:
 			var value = commandSplit[i].to_lower()
-			if value == "true" && commandSplit[i].to_lower() == "false":
+			if value != "true" or value != "false":
 				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an bool, but an incorrect value was passed.")
 				return
 			commandFunction += value + ","
@@ -280,18 +283,28 @@ static func update_monitor(name, value):
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
 
-static func hide_console(hideStats=false):
-	for child in get_console().get_children():
-		if !hideStats or child.name != "Stats":
+static func hide_console(showStats=false, showMiniLog=false):
+	var console = get_console()
+	for child in console.get_children():
+		if (!showStats or child.name != "Stats") and (!showMiniLog or child.name != "Mini Log"):
 			child.visible = false
+		elif child.name == "Mini Log":
+			child.visible = true
+			await console.get_tree().create_timer(0.01).timeout
+			console.miniLog.scroll_vertical = console.miniLogScrollBar.max_value
 
 static func show_console():
 	for child in get_console().get_children():
-		child.visible = true
+		if child.name != "Mini Log":
+			child.visible = true
+		else:
+			child.visible = false
 
 static func _update_log():
-	var root = (Engine.get_main_loop() as SceneTree).root
+	var console = get_console()
 	var logText = ""
-	for line in root.get_node("/root/debug_console").consoleLog:
+	for line in console.consoleLog:
 		logText += str(line) + "\n"
-	root.get_node("/root/debug_console/Log/Log Content").text = logText
+	
+	console.get_node("Log/Log Content").text = logText
+	console.get_node("Mini Log/MarginContainer/Log Content").text = "[right]" + logText
