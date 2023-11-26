@@ -4,12 +4,14 @@ var id: String
 var parameters: Array
 var function: Callable
 var functionInstance: Object
+var getFunction
 
-func _init(id:String, function:Callable, functionInstance: Object, parameters:Array=[]):
+func _init(id:String, function:Callable, functionInstance: Object, parameters:Array=[], getFunction=null):
 	self.id = id
 	self.parameters = parameters
 	self.function = function
 	self.functionInstance = functionInstance
+	if getFunction != null: self.getFunction = getFunction
 
 class Parameter:
 	var name: String
