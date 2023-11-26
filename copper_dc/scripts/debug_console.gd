@@ -2,12 +2,14 @@ extends CanvasLayer
 class_name DebugConsole
 
 class Monitor:
-	var name: String
+	var id: String
+	var displayName: String
 	var value: Variant
 	var visible: bool
 	
-	func _init(name:String, value:Variant, visible:bool):
-		self.name = name
+	func _init(id:String, displayName:String, value:Variant, visible:bool):
+		self.id = id
+		self.displayName = displayName
 		self.value = value
 		self.visible = visible
 
@@ -37,14 +39,14 @@ func _ready():
 	logScrollBar.connect("changed", _on_scrollbar_changed)
 	
 	# Register built-in monitors
-	add_monitor("FPS")
-	add_monitor("Process", false)
-	add_monitor("Physics Process", false)
-	add_monitor("Navigation Process", false)
-	add_monitor("Static Memory", false)
-	add_monitor("Static Memory Max", false)
-	add_monitor("Objects", false)
-	add_monitor("Nodes", false)
+	add_monitor("fps", "FPS")
+	add_monitor("process", "Process", false)
+	add_monitor("physics_process", "Physics Process", false)
+	add_monitor("navigation_process", "Navigation Process", false)
+	add_monitor("static_memory", "Static Memory", false)
+	add_monitor("static_memory_max", "Static Memory Max", false)
+	add_monitor("objects", "Objects", false)
+	add_monitor("nodes", "Nodes", false)
 	
 	# Register built-in commands
 	await get_tree().create_timer(0.05).timeout
@@ -55,29 +57,29 @@ func _on_scrollbar_changed():
 
 func _process(delta):
 	if stats.visible:
-		if monitors["FPS"].visible:
-			update_monitor("FPS", Performance.get_monitor(Performance.TIME_FPS))
-		if monitors["Process"].visible:
-			update_monitor("Process", snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
-		if monitors["Physics Process"].visible:
-			update_monitor("Physics Process", snapped(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS), 0.001))
-		if monitors["Navigation Process"].visible:
-			update_monitor("Navigation Process", snapped(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS), 0.001))
-		if monitors["Static Memory"].visible:
-			update_monitor("Static Memory", snapped(Performance.get_monitor(Performance.MEMORY_STATIC), 0.001))
-		if monitors["Static Memory Max"].visible:
-			update_monitor("Static Memory Max", snapped(Performance.get_monitor(Performance.MEMORY_STATIC_MAX), 0.001))
-		if monitors["Objects"].visible:
-			update_monitor("Objects", Performance.get_monitor(Performance.OBJECT_COUNT))
-		if monitors["Nodes"].visible:
-			update_monitor("Nodes", Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+		if is_monitor_visible("fps"):
+			update_monitor("fps", Performance.get_monitor(Performance.TIME_FPS))
+		if is_monitor_visible("process"):
+			update_monitor("process", snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
+		if is_monitor_visible("physics_process"):
+			update_monitor("physics_process", snapped(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS), 0.001))
+		if is_monitor_visible("navigation_process"):
+			update_monitor("navigation_process", snapped(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS), 0.001))
+		if is_monitor_visible("static_memory"):
+			update_monitor("static_memory", snapped(Performance.get_monitor(Performance.MEMORY_STATIC), 0.001))
+		if is_monitor_visible("static_memory_max"):
+			update_monitor("static_memory_max", snapped(Performance.get_monitor(Performance.MEMORY_STATIC_MAX), 0.001))
+		if is_monitor_visible("objects"):
+			update_monitor("objects", Performance.get_monitor(Performance.OBJECT_COUNT))
+		if is_monitor_visible("nodes"):
+			update_monitor("nodes", Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
 		
 		stats.text = ""
 		for monitor in monitors.values():
 			if monitor.visible:
 				if monitor.value == null: monitor.value = "unset"
 				else: monitor.value = str(monitor.value)
-				stats.text += monitor.name + ": " + monitor.value + "\n"
+				stats.text += monitor.displayName + ": " + monitor.value + "\n"
 
 func _input(event):
 	# Open debug
@@ -304,23 +306,31 @@ static func add_command_setvar(id:String, function:Callable, functionInstance:Ob
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 
-static func add_monitor(name, visible:bool=true):
-	if get_console().monitors.keys().has(name):
+static func add_monitor(id, displayName, visible:bool=true):
+	if id.contains(" "): 
+		DebugConsole.log_error("Monitor id \"" + id + "\"" + "needs to be a single word.")
+		return
+	elif get_console().monitors.keys().has(id):
 		pass
 	else:
-		get_console().monitors[name] = Monitor.new(name, null, visible)
+		get_console().monitors[id] = Monitor.new(id, displayName, null, visible)
 
-static func update_monitor(name, value):
-	if !get_console().monitors.keys().has(name):
-		DebugConsole.log_error("Monitor " + name + " does not exist.")
+static func update_monitor(id, value):
+	if !get_console().monitors.keys().has(id):
+		DebugConsole.log_error("Monitor " + id + " does not exist.")
 	else:
-		get_console().monitors[name].value = value
+		get_console().monitors[id].value = value
 
-static func set_monitor_visible(name, visible):
-	if !get_console().monitors.keys().has(name):
-		DebugConsole.log_error("Monitor " + name + " does not exist.")
+static func is_monitor_visible(id) -> bool:
+	var monitors = get_console().monitors
+	if !monitors.keys().has(id): return false
+	else: return monitors[id].visible
+
+static func set_monitor_visible(id, visible):
+	if !get_console().monitors.keys().has(id):
+		DebugConsole.log_error("Monitor " + id + " does not exist.")
 	else:
-		get_console().monitors[name].visible = visible
+		get_console().monitors[id].visible = visible
 
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
