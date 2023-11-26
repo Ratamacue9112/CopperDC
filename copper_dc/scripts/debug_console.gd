@@ -1,9 +1,24 @@
 extends CanvasLayer
 class_name DebugConsole
 
+class Monitor:
+	var id: String
+	var displayName: String
+	var value: Variant
+	var visible: bool
+	
+	func _init(id:String, displayName:String, value:Variant, visible:bool):
+		self.id = id
+		self.displayName = displayName
+		self.value = value
+		self.visible = visible
+
 var consoleLog = []
 var commands = {}
 var monitors = {}
+
+var showStats = false
+var showMiniLog = false
 
 @onready var commandField = $"Command Field"
 
@@ -14,42 +29,69 @@ var monitors = {}
 @onready var commandHintHeaderLabel = $"Command Hint Header/RichTextLabel"
 
 @onready var stats = $"Stats"
+@onready var miniLog = $"Mini Log"
 @onready var logField = $Log
-@onready var scrollBar = logField.get_v_scroll_bar()
+@onready var logScrollBar = logField.get_v_scroll_bar()
+@onready var miniLogScrollBar = miniLog.get_v_scroll_bar()
 
 func _ready():
-	visible = false
-	scrollBar.connect("changed", _on_scrollbar_changed)
+	hide_console()
+	logScrollBar.connect("changed", _on_scrollbar_changed)
+	
+	# Register built-in monitors
+	add_monitor("fps", "FPS")
+	add_monitor("process", "Process", false)
+	add_monitor("physics_process", "Physics Process", false)
+	add_monitor("navigation_process", "Navigation Process", false)
+	add_monitor("static_memory", "Static Memory", false)
+	add_monitor("static_memory_max", "Static Memory Max", false)
+	add_monitor("objects", "Objects", false)
+	add_monitor("nodes", "Nodes", false)
 	
 	# Register built-in commands
-	commands["clear"] = DebugCommand.new("clear", clear_log, self)
+	await get_tree().create_timer(0.05).timeout
 	_BuiltInCommands.new().init()
 
 func _on_scrollbar_changed():
-	logField.scroll_vertical = scrollBar.max_value
+	logField.scroll_vertical = logScrollBar.max_value
 
 func _process(delta):
-	if visible:
+	if stats.visible:
+		if is_monitor_visible("fps"):
+			update_monitor("fps", Performance.get_monitor(Performance.TIME_FPS))
+		if is_monitor_visible("process"):
+			update_monitor("process", snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
+		if is_monitor_visible("physics_process"):
+			update_monitor("physics_process", snapped(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS), 0.001))
+		if is_monitor_visible("navigation_process"):
+			update_monitor("navigation_process", snapped(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS), 0.001))
+		if is_monitor_visible("static_memory"):
+			update_monitor("static_memory", snapped(Performance.get_monitor(Performance.MEMORY_STATIC), 0.001))
+		if is_monitor_visible("static_memory_max"):
+			update_monitor("static_memory_max", snapped(Performance.get_monitor(Performance.MEMORY_STATIC_MAX), 0.001))
+		if is_monitor_visible("objects"):
+			update_monitor("objects", Performance.get_monitor(Performance.OBJECT_COUNT))
+		if is_monitor_visible("nodes"):
+			update_monitor("nodes", Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+		
 		stats.text = ""
-		for monitorName in monitors:
-			var monitorValue = monitors[monitorName]
-			if monitorValue == null: monitorValue = "unset"
-			else: monitorValue = str(monitorValue)
-			stats.text += monitorName + ": " + monitorValue + "\n"
-		stats.text += "FPS: " + str(Performance.get_monitor(Performance.TIME_FPS))
-		stats.text += "\nProcess Time: " + str(snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
+		for monitor in monitors.values():
+			if monitor.visible:
+				if monitor.value == null: monitor.value = "unset"
+				else: monitor.value = str(monitor.value)
+				stats.text += monitor.displayName + ": " + monitor.value + "\n"
 
 func _input(event):
 	# Open debug
-	if !visible and event.is_action_pressed("open_debug"):
-		visible = true
+	if !commandField.visible and event.is_action_pressed("open_debug"):
+		show_console()
 		_on_command_field_text_changed(commandField.text)
 		# This is stupid but it works
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
 	# Close debug
 	elif visible and event.is_action_pressed("ui_cancel"):
-		visible = false
+		hide_console(showStats, showMiniLog)
 	# Enter command
 	elif visible and event.is_action_pressed("ui_text_submit"):
 		DebugConsole.log("> " + commandField.text)
@@ -117,6 +159,11 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 			text += " [b]<" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">[/b]"
 		else:
 			text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
+		if command.getFunction != null:
+			#print(typeof(command.getFunction))
+			var value = command.getFunction.call()
+			if value != null:
+				text += " === " + str(value)
 	return text
 
 func process_command(command):
@@ -193,7 +240,7 @@ func process_command(command):
 		# Bool parameter
 		elif currentParameterObj.type == DebugCommand.ParameterType.Bool:
 			var value = commandSplit[i].to_lower()
-			if value == "true" && commandSplit[i].to_lower() == "false":
+			if value != "true" and value != "false":
 				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an bool, but an incorrect value was passed.")
 				return
 			commandFunction += value + ","
@@ -248,30 +295,72 @@ static func clear_log():
 	get_console().consoleLog.clear()
 	_update_log()
 
-static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[]):
-	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters)
+static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[], getFunction=null):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters, getFunction)
+
+static func add_command_setvar(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType, getFunction=null):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, [
+		DebugCommand.Parameter.new("value", type)
+	], getFunction)
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 
-static func add_monitor(name):
-	if get_console().monitors.keys().has(name):
-		DebugConsole.log_error("Monitor " + name + " already exists.")
+static func add_monitor(id, displayName, visible:bool=true):
+	if id.contains(" "): 
+		DebugConsole.log_error("Monitor id \"" + id + "\"" + "needs to be a single word.")
+		return
+	elif get_console().monitors.keys().has(id):
+		pass
 	else:
-		get_console().monitors[name] = null
+		get_console().monitors[id] = Monitor.new(id, displayName, null, visible)
 
-static func update_monitor(name, value):
-	if !get_console().monitors.keys().has(name):
-		DebugConsole.log_error("Monitor " + name + " does not exist.")
+static func update_monitor(id, value):
+	if !get_console().monitors.keys().has(id):
+		DebugConsole.log_error("Monitor " + id + " does not exist.")
 	else:
-		get_console().monitors[name] = value
+		get_console().monitors[id].value = value
+
+static func is_monitor_visible(id) -> bool:
+	var monitors = get_console().monitors
+	if !monitors.keys().has(id): return false
+	else: return monitors[id].visible
+
+static func set_monitor_visible(id, visible):
+	if !get_console().monitors.keys().has(id):
+		DebugConsole.log_error("Monitor " + id + " does not exist.")
+	else:
+		get_console().monitors[id].visible = visible
 
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
 
+static func hide_console(showStats:bool=false, showMiniLog:bool=false):
+	var console = get_console()
+	for child in console.get_children():
+		if (!showStats or child.name != "Stats") and (!showMiniLog or child.name != "Mini Log"):
+			child.visible = false
+		elif child.name == "Mini Log":
+			child.visible = true
+			await console.get_tree().create_timer(0.01).timeout
+			console.miniLog.scroll_vertical = console.miniLogScrollBar.max_value
+
+static func show_console():
+	for child in get_console().get_children():
+		if child.name != "Mini Log":
+			child.visible = true
+		else:
+			child.visible = false
+
+static func setup_cfg():
+	DirAccess.make_dir_absolute("user://cfg")
+	#var file = FileAccess.open("user://cfg/autoexec.cfg", FileAccess.WRITE)
+
 static func _update_log():
-	var root = (Engine.get_main_loop() as SceneTree).root
+	var console = get_console()
 	var logText = ""
-	for line in root.get_node("/root/debug_console").consoleLog:
+	for line in console.consoleLog:
 		logText += str(line) + "\n"
-	root.get_node("/root/debug_console/Log/Log Content").text = logText
+	
+	console.get_node("Log/MarginContainer/Log Content").text = logText
+	console.get_node("Mini Log/MarginContainer/Log Content").text = "[right]" + logText
