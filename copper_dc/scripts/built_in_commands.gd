@@ -26,6 +26,7 @@ func init():
 		_get_log_shown
 	)
 	
+	# Exec
 	var cfgs = []
 	for file in list_files_in_directory("user://cfg"):
 		var fileSplit = file.split(".")
@@ -40,6 +41,19 @@ func init():
 		self, 
 		[DebugCommand.Parameter.new("cfg", DebugCommand.ParameterType.Options, cfgs)]
 	)
+	
+	var monitors = DebugConsole.get_console().monitors.keys()
+	# Show monitor
+	DebugConsole.add_command(
+		"show_monitor",
+		DebugConsole.set_monitor_visible,
+		DebugConsole,
+		[
+			DebugCommand.Parameter.new("monitor", DebugCommand.ParameterType.Options, monitors),
+			DebugCommand.Parameter.new("visible", DebugCommand.ParameterType.Bool)
+		]
+	)
+	# Hide monitor
 
 func list_files_in_directory(path):
 	var files = []

@@ -1,6 +1,16 @@
 extends CanvasLayer
 class_name DebugConsole
 
+class Monitor:
+	var name: String
+	var value: Variant
+	var visible: bool
+	
+	func _init(name:String, value:Variant, visible:bool):
+		self.name = name
+		self.value = value
+		self.visible = visible
+
 var consoleLog = []
 var commands = {}
 var monitors = {}
@@ -26,7 +36,18 @@ func _ready():
 	hide_console()
 	logScrollBar.connect("changed", _on_scrollbar_changed)
 	
+	# Register built-in monitors
+	add_monitor("FPS")
+	add_monitor("Process", false)
+	add_monitor("Physics Process", false)
+	add_monitor("Navigation Process", false)
+	add_monitor("Static Memory", false)
+	add_monitor("Static Memory Max", false)
+	add_monitor("Objects", false)
+	add_monitor("Nodes", false)
+	
 	# Register built-in commands
+	await get_tree().create_timer(0.05).timeout
 	_BuiltInCommands.new().init()
 
 func _on_scrollbar_changed():
@@ -34,14 +55,29 @@ func _on_scrollbar_changed():
 
 func _process(delta):
 	if stats.visible:
+		if monitors["FPS"].visible:
+			update_monitor("FPS", Performance.get_monitor(Performance.TIME_FPS))
+		if monitors["Process"].visible:
+			update_monitor("Process", snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
+		if monitors["Physics Process"].visible:
+			update_monitor("Physics Process", snapped(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS), 0.001))
+		if monitors["Navigation Process"].visible:
+			update_monitor("Navigation Process", snapped(Performance.get_monitor(Performance.TIME_NAVIGATION_PROCESS), 0.001))
+		if monitors["Static Memory"].visible:
+			update_monitor("Static Memory", snapped(Performance.get_monitor(Performance.MEMORY_STATIC), 0.001))
+		if monitors["Static Memory Max"].visible:
+			update_monitor("Static Memory Max", snapped(Performance.get_monitor(Performance.MEMORY_STATIC_MAX), 0.001))
+		if monitors["Objects"].visible:
+			update_monitor("Objects", Performance.get_monitor(Performance.OBJECT_COUNT))
+		if monitors["Nodes"].visible:
+			update_monitor("Nodes", Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
+		
 		stats.text = ""
-		for monitorName in monitors:
-			var monitorValue = monitors[monitorName]
-			if monitorValue == null: monitorValue = "unset"
-			else: monitorValue = str(monitorValue)
-			stats.text += monitorName + ": " + monitorValue + "\n"
-		stats.text += "FPS: " + str(Performance.get_monitor(Performance.TIME_FPS))
-		stats.text += "\nProcess Time: " + str(snapped(Performance.get_monitor(Performance.TIME_PROCESS), 0.001))
+		for monitor in monitors.values():
+			if monitor.visible:
+				if monitor.value == null: monitor.value = "unset"
+				else: monitor.value = str(monitor.value)
+				stats.text += monitor.name + ": " + monitor.value + "\n"
 
 func _input(event):
 	# Open debug
@@ -268,22 +304,28 @@ static func add_command_setvar(id:String, function:Callable, functionInstance:Ob
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 
-static func add_monitor(name):
+static func add_monitor(name, visible:bool=true):
 	if get_console().monitors.keys().has(name):
-		DebugConsole.log_error("Monitor " + name + " already exists.")
+		pass
 	else:
-		get_console().monitors[name] = null
+		get_console().monitors[name] = Monitor.new(name, null, visible)
 
 static func update_monitor(name, value):
 	if !get_console().monitors.keys().has(name):
 		DebugConsole.log_error("Monitor " + name + " does not exist.")
 	else:
-		get_console().monitors[name] = value
+		get_console().monitors[name].value = value
+
+static func set_monitor_visible(name, visible):
+	if !get_console().monitors.keys().has(name):
+		DebugConsole.log_error("Monitor " + name + " does not exist.")
+	else:
+		get_console().monitors[name].visible = visible
 
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
 
-static func hide_console(showStats=false, showMiniLog=false):
+static func hide_console(showStats:bool=false, showMiniLog:bool=false):
 	var console = get_console()
 	for child in console.get_children():
 		if (!showStats or child.name != "Stats") and (!showMiniLog or child.name != "Mini Log"):
