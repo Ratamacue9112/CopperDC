@@ -34,6 +34,7 @@ var showMiniLog = false
 @onready var logScrollBar = logField.get_v_scroll_bar()
 @onready var miniLogScrollBar = miniLog.get_v_scroll_bar()
 
+#region Overrides
 func _ready():
 	hide_console()
 	logScrollBar.connect("changed", _on_scrollbar_changed)
@@ -150,7 +151,9 @@ func _on_command_field_text_changed(new_text):
 			commandHintsParent.visible = false
 			commandHintsLabel.visible = false
 			commandHintsPanel.visible = false
+#endregion
 
+#region Commands processing
 func _get_parameter_text(command, currentParameter=-1) -> String:
 	var text: String = command.id
 	var isHeader = currentParameter < command.parameters.size() and currentParameter >= 0
@@ -274,7 +277,9 @@ func process_command(command):
 		return
 
 	expression.execute([], commandData.functionInstance)
+#endregion
 
+#region Logging
 static func log(message):
 	# Add to log
 	get_console().consoleLog.append(message)
@@ -294,7 +299,9 @@ static func log_error(message):
 static func clear_log():
 	get_console().consoleLog.clear()
 	_update_log()
+#endregion
 
+#region Creating commands
 static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[], getFunction=null):
 	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters, getFunction)
 
@@ -305,7 +312,9 @@ static func add_command_setvar(id:String, function:Callable, functionInstance:Ob
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
+#endregion
 
+#region Monitors
 static func add_monitor(id, displayName, visible:bool=true):
 	if id.contains(" "): 
 		DebugConsole.log_error("Monitor id \"" + id + "\"" + "needs to be a single word.")
@@ -331,7 +340,9 @@ static func set_monitor_visible(id, visible):
 		DebugConsole.log_error("Monitor " + id + " does not exist.")
 	else:
 		get_console().monitors[id].visible = visible
+#endregion
 
+#region Console managing
 static func get_console() -> CanvasLayer:
 	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
 
@@ -352,10 +363,6 @@ static func show_console():
 		else:
 			child.visible = false
 
-static func setup_cfg():
-	DirAccess.make_dir_absolute("user://cfg")
-	#var file = FileAccess.open("user://cfg/autoexec.cfg", FileAccess.WRITE)
-
 static func _update_log():
 	var console = get_console()
 	var logText = ""
@@ -364,3 +371,8 @@ static func _update_log():
 	
 	console.get_node("Log/MarginContainer/Log Content").text = logText
 	console.get_node("Mini Log/MarginContainer/Log Content").text = "[right]" + logText
+#endregion
+
+static func setup_cfg():
+	DirAccess.make_dir_absolute("user://cfg")
+	#var file = FileAccess.open("user://cfg/autoexec.cfg", FileAccess.WRITE)
