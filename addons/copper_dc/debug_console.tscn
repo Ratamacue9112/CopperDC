@@ -86,7 +86,6 @@ size_flags_horizontal = 3
 [node name="Log Content" type="RichTextLabel" parent="Log/MarginContainer"]
 layout_mode = 2
 bbcode_enabled = true
-text = "weriutgerfuweofuwhfuoiwhfwiurfghweiurgweoriugweriuhwefiuhwefiuwehrgfiuwehrfiuwerhfiuwerhfiweurhfiwuerhf"
 fit_content = true
 scroll_following = true
 
