@@ -16,6 +16,8 @@ class Monitor:
 var consoleLog = []
 var commands = {}
 var monitors = {}
+var history = []
+var current_history = -1
 
 var showStats = false
 var showMiniLog = false
@@ -100,6 +102,26 @@ func _input(event):
 			DebugConsole.log("> " + commandField.text)
 			process_command(commandField.text)
 			commandField.clear()
+	# Back in history
+	elif consolePanel.visible and event.is_action_pressed("ui_up"):
+		if history.size() > 0 and current_history != -1:
+			if current_history > 0:
+				current_history -= 1
+			commandField.text = history[current_history]
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
+	# Forward in history
+	elif consolePanel.visible and event.is_action_pressed("ui_down"):
+		if history.size() > 0 and current_history < history.size() - 1:
+			current_history += 1
+			commandField.text = history[current_history]
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
+		elif current_history == history.size() - 1:
+			commandField.text = ""
+			current_history = history.size()
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
 
 func _on_command_field_text_changed(new_text):
 	var commandHints = []
@@ -172,6 +194,8 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 	return text
 
 func process_command(command):
+	history.append(command)
+	current_history = history.size()
 	# Splits command
 	var commandSplit = command.split(" ")
 	# Checks if command is valid
