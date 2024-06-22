@@ -399,6 +399,13 @@ static func show_console():
 		#else:
 			#child.visible = false
 
+static func is_console_visible() -> bool:
+	var console = get_console()
+	if is_instance_valid(console):
+		return console.get_node("ConsolePanel").visible
+	else:
+		return false
+
 static func _update_log():
 	var console := get_console()
 	var logText = ""
