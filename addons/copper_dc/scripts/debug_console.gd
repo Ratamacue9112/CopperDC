@@ -16,21 +16,24 @@ class Monitor:
 var consoleLog = []
 var commands = {}
 var monitors = {}
+var history = []
+var current_history = -1
 
 var showStats = false
 var showMiniLog = false
 
-@onready var commandField = $"Command Field"
+@onready var commandField = %"Command Field"
+@onready var consolePanel = %"ConsolePanel"
 
-@onready var commandHintsPanel = $"Command Hints Panel"
-@onready var commandHintsParent = $"Command Hints"
-@onready var commandHintsLabel = $"Command Hints/RichTextLabel"
-@onready var commandHintHeader = $"Command Hint Header"
-@onready var commandHintHeaderLabel = $"Command Hint Header/RichTextLabel"
+@onready var commandHintsPanel = %"Command Hints Panel"
+@onready var commandHintsParent = %"Command Hints"
+@onready var commandHintsLabel = %"Command Hints/RichTextLabel"
+@onready var commandHintHeader = %"Command Hint Header"
+@onready var commandHintHeaderLabel = %"Command Hint Header/RichTextLabel"
 
-@onready var stats = $"Stats"
-@onready var miniLog = $"Mini Log"
-@onready var logField = $Log
+@onready var stats = %"Stats"
+@onready var miniLog = %"Mini Log"
+@onready var logField = %Log
 @onready var logScrollBar = logField.get_v_scroll_bar()
 @onready var miniLogScrollBar = miniLog.get_v_scroll_bar()
 
@@ -84,20 +87,41 @@ func _process(delta):
 
 func _input(event):
 	# Open debug
-	if !commandField.visible and event.is_action_pressed("open_debug"):
+	if !consolePanel.visible and event.is_action_pressed("open_debug"):
 		show_console()
 		_on_command_field_text_changed(commandField.text)
 		# This is stupid but it works
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
 	# Close debug
-	elif visible and event.is_action_pressed("ui_cancel"):
+	elif consolePanel.visible and event.is_action_pressed("ui_cancel"):
 		hide_console(showStats, showMiniLog)
 	# Enter command
-	elif visible and event.is_action_pressed("ui_text_submit"):
-		DebugConsole.log("> " + commandField.text)
-		process_command(commandField.text)
-		commandField.clear()
+	elif consolePanel.visible and event.is_action_pressed("ui_text_submit"):
+		if commandField.text.length() > 0:
+			DebugConsole.log("> " + commandField.text)
+			process_command(commandField.text)
+			commandField.clear()
+	# Back in history
+	elif consolePanel.visible and event.is_action_pressed("ui_up"):
+		if history.size() > 0 and current_history != -1:
+			if current_history > 0:
+				current_history -= 1
+			commandField.text = history[current_history]
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
+	# Forward in history
+	elif consolePanel.visible and event.is_action_pressed("ui_down"):
+		if history.size() > 0 and current_history < history.size() - 1:
+			current_history += 1
+			commandField.text = history[current_history]
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
+		elif current_history == history.size() - 1:
+			commandField.text = ""
+			current_history = history.size()
+			await get_tree().process_frame
+			commandField.set_caret_column(commandField.text.length())
 
 func _on_command_field_text_changed(new_text):
 	var commandHints = []
@@ -170,6 +194,8 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 	return text
 
 func process_command(command):
+	history.append(command)
+	current_history = history.size()
 	# Splits command
 	var commandSplit = command.split(" ")
 	# Checks if command is valid
@@ -352,34 +378,35 @@ static func set_monitor_visible(id, visible):
 #endregion
 
 #region Console managing
-static func get_console() -> CanvasLayer:
-	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as CanvasLayer
+static func get_console() -> DebugConsole:
+	return (Engine.get_main_loop() as SceneTree).root.get_node("/root/debug_console") as DebugConsole
 
 static func hide_console(showStats:bool=false, showMiniLog:bool=false):
-	var console = get_console()
-	for child in console.get_children():
-		if (!showStats or child.name != "Stats") and (!showMiniLog or child.name != "Mini Log"):
-			child.visible = false
-		elif child.name == "Mini Log":
-			child.visible = true
-			await console.get_tree().create_timer(0.01).timeout
-			console.miniLog.scroll_vertical = console.miniLogScrollBar.max_value
+	var console := get_console()
+	console.consolePanel.visible = false
+	console.stats.visible = showStats
+	console.miniLog.visible = showMiniLog
+	await console.get_tree().create_timer(0.01).timeout
+	console.miniLog.scroll_vertical = console.miniLogScrollBar.max_value
 
 static func show_console():
-	for child in get_console().get_children():
-		if child.name != "Mini Log":
-			child.visible = true
-		else:
-			child.visible = false
+	get_console().consolePanel.visible = true
+	get_console().stats.visible = true
+	get_console().miniLog.visible = false
+	#for child in get_console().get_children():
+		#if child.name != "Mini Log":
+			#child.visible = true
+		#else:
+			#child.visible = false
 
 static func _update_log():
-	var console = get_console()
+	var console := get_console()
 	var logText = ""
 	for line in console.consoleLog:
 		logText += str(line) + "\n"
 	
-	console.get_node("Log/MarginContainer/Log Content").text = logText
-	console.get_node("Mini Log/MarginContainer/Log Content").text = "[right]" + logText
+	console.logField.get_node("MarginContainer/Log Content").text = logText
+	console.miniLog.get_node("MarginContainer/Log Content").text = "[right]" + logText
 #endregion
 
 static func setup_cfg():
