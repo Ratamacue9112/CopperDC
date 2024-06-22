@@ -314,6 +314,15 @@ static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 #endregion
 
+#region Removing commands
+static func remove_command(id:String) -> bool:
+	return get_console().commands.erase(id)
+
+static func remove_commands(ids:Array[String]):
+	for id in ids:
+		remove_command(id)
+#endregion
+
 #region Monitors
 static func add_monitor(id, displayName, visible:bool=true):
 	if id.contains(" "): 
