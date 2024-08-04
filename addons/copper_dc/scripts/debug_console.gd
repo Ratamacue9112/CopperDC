@@ -198,7 +198,6 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 		else:
 			text += " <" + parameter.name + ": " + DebugCommand.ParameterType.keys()[parameter.type] + ">"
 		if command.getFunction != null:
-			#print(typeof(command.getFunction))
 			var value = command.getFunction.call()
 			if value != null:
 				text += " === " + str(value)
@@ -407,11 +406,6 @@ static func show_console():
 	console.consolePanel.visible = true
 	console.stats.visible = true
 	console.miniLog.visible = false
-	#for child in get_console().get_children():
-		#if child.name != "Mini Log":
-			#child.visible = true
-		#else:
-			#child.visible = false
 	
 	if console.pauseOnOpen: console.get_tree().paused = true
 

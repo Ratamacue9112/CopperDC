@@ -19,7 +19,7 @@ func init():
 	
 	# Show log
 	DebugConsole.add_command_setvar(
-		"show_log", 
+		"show_mini_log", 
 		_show_log, 
 		self, 
 		DebugCommand.ParameterType.Bool,
@@ -43,9 +43,9 @@ func init():
 	)
 	
 	var monitors = DebugConsole.get_console().monitors.keys()
-	# Show monitor
+	# Show/hide monitor
 	DebugConsole.add_command(
-		"show_monitor",
+		"set_monitor_visible",
 		DebugConsole.set_monitor_visible,
 		DebugConsole,
 		[
@@ -53,7 +53,6 @@ func init():
 			DebugCommand.Parameter.new("visible", DebugCommand.ParameterType.Bool)
 		]
 	)
-	# Hide monitor
 
 func list_files_in_directory(path):
 	var files = []
@@ -95,7 +94,6 @@ func _exec(file):
 	var commandCount = 0
 	for command in commands:
 		if command.replace(" ", "") != "":
-			#DebugConsole.log("> " + command)
 			DebugConsole.get_console().process_command(command)
 			commandCount += 1
 	DebugConsole.log("File " + file + ".cfg ran " + str(commandCount) + " commands.")
