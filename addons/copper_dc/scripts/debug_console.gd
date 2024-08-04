@@ -19,6 +19,7 @@ var monitors = {}
 var history = []
 var current_history = -1
 
+var pauseOnOpen = false
 var showStats = false
 var showMiniLog = false
 
@@ -388,16 +389,21 @@ static func hide_console(showStats:bool=false, showMiniLog:bool=false):
 	console.miniLog.visible = showMiniLog
 	await console.get_tree().create_timer(0.01).timeout
 	console.miniLog.scroll_vertical = console.miniLogScrollBar.max_value
+	
+	if console.pauseOnOpen: console.get_tree().paused = false
 
 static func show_console():
-	get_console().consolePanel.visible = true
-	get_console().stats.visible = true
-	get_console().miniLog.visible = false
+	var console := get_console()
+	console.consolePanel.visible = true
+	console.stats.visible = true
+	console.miniLog.visible = false
 	#for child in get_console().get_children():
 		#if child.name != "Mini Log":
 			#child.visible = true
 		#else:
 			#child.visible = false
+	
+	if console.pauseOnOpen: console.get_tree().paused = true
 
 static func is_console_visible() -> bool:
 	var console = get_console()
@@ -405,6 +411,9 @@ static func is_console_visible() -> bool:
 		return console.get_node("ConsolePanel").visible
 	else:
 		return false
+
+static func set_pause_on_open(pause:bool):
+	get_console().pauseOnOpen = pause
 
 static func _update_log():
 	var console := get_console()
