@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://addons/copper_dc/scripts/debug_console.gd" id="1_fs6bc"]
 
 [node name="Debug Console" type="CanvasLayer"]
+process_mode = 3
 layer = 100
 script = ExtResource("1_fs6bc")
 
@@ -126,8 +127,10 @@ context_menu_enabled = false
 
 [node name="Stats" type="Label" parent="."]
 unique_name_in_owner = true
-offset_right = 149.0
-offset_bottom = 85.0
+offset_left = 9.0
+offset_top = 8.0
+offset_right = 163.0
+offset_bottom = 101.0
 size_flags_horizontal = 3
 
 [node name="Mini Log" type="ScrollContainer" parent="."]
@@ -138,7 +141,8 @@ anchors_preset = 1
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -437.0
-offset_bottom = 88.0
+offset_top = 12.0
+offset_bottom = 98.0
 grow_horizontal = 0
 mouse_filter = 2
 horizontal_scroll_mode = 0
