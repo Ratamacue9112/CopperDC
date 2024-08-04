@@ -38,7 +38,7 @@ var showMiniLog = false
 @onready var logScrollBar = logField.get_v_scroll_bar()
 @onready var miniLogScrollBar = miniLog.get_v_scroll_bar()
 
-#region Overrides
+#region Overrides and signals
 func _ready():
 	hide_console()
 	logScrollBar.connect("changed", _on_scrollbar_changed)
@@ -157,7 +157,7 @@ func _on_command_field_text_changed(new_text):
 			if !options.is_empty():
 				for option in options:
 					if str(option).begins_with(commandSplit[commandSplit.size() - 1]):
-						commandHintsLabel.text += str(option) + "\n"
+						commandHintsLabel.text += "[url]" + str(option) + "[/url]\n"
 	else:
 		var sortedCommands = commands.keys()
 		sortedCommands.sort()
@@ -171,11 +171,21 @@ func _on_command_field_text_changed(new_text):
 			commandHintsPanel.visible = true
 			commandHintsLabel.text = ""
 			for command in commandHints:
-				commandHintsLabel.text += _get_parameter_text(command) + "\n"
+				commandHintsLabel.text += "[url=" + command.id + "]" + _get_parameter_text(command) + "[/url]\n"
 		else:
 			commandHintsParent.visible = false
 			commandHintsLabel.visible = false
 			commandHintsPanel.visible = false
+
+func _on_command_hints_meta_clicked(meta):
+	var commandSplit = commandField.text.split(" ")
+	commandSplit[-1] = meta
+	var newText = ""
+	for i in commandSplit:
+		newText += i + " "
+	commandField.text = newText
+	commandField.caret_column = len(commandField.text)
+	_on_command_field_text_changed(commandField.text)
 #endregion
 
 #region Commands processing
