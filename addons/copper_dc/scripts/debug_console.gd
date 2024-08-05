@@ -338,13 +338,13 @@ static func clear_log():
 #endregion
 
 #region Creating commands
-static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[], getFunction=null):
-	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters, getFunction)
+static func add_command(id:String, function:Callable, functionInstance:Object, parameters:Array=[], helpText:String="", getFunction=null):
+	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, parameters, helpText, getFunction)
 
-static func add_command_setvar(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType, getFunction=null):
+static func add_command_setvar(id:String, function:Callable, functionInstance:Object, type:DebugCommand.ParameterType, helpText:String="", getFunction=null):
 	get_console().commands[id] = DebugCommand.new(id, function, functionInstance, [
 		DebugCommand.Parameter.new("value", type)
-	], getFunction)
+	], helpText, getFunction)
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
