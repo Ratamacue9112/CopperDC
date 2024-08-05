@@ -42,6 +42,13 @@ func init():
 		[DebugCommand.Parameter.new("cfg", DebugCommand.ParameterType.Options, cfgs)]
 	)
 	
+	# Open cfg directory
+	DebugConsole.add_command(
+		"open_cfg_dir", 
+		_open_cfg_dir, 
+		self
+	)
+	
 	var monitors = DebugConsole.get_console().monitors.keys()
 	# Show/hide monitor
 	DebugConsole.add_command(
@@ -97,3 +104,6 @@ func _exec(file):
 			DebugConsole.get_console().process_command(command)
 			commandCount += 1
 	DebugConsole.log("File " + file + ".cfg ran " + str(commandCount) + " commands.")
+
+func _open_cfg_dir():
+	OS.shell_open(ProjectSettings.globalize_path("user://cfg"))
