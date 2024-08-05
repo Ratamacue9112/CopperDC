@@ -5,7 +5,9 @@ func init():
 	DebugConsole.add_command(
 		"clear", 
 		DebugConsole.clear_log, 
-		DebugConsole
+		DebugConsole,
+		[],
+		"Clears the console."
 	)
 	
 	# Show stats
@@ -13,7 +15,8 @@ func init():
 		"show_stats", 
 		_show_stats, 
 		self, 
-		DebugCommand.ParameterType.Bool, 
+		DebugCommand.ParameterType.Bool,
+		"Sets whether the stats in the top left is visible.",
 		_get_stats_shown
 	)
 	
@@ -23,6 +26,7 @@ func init():
 		_show_log, 
 		self, 
 		DebugCommand.ParameterType.Bool,
+		"Sets whether the mini log in the top right is visible.",
 		_get_log_shown
 	)
 	
@@ -39,14 +43,17 @@ func init():
 		"exec", 
 		_exec, 
 		self, 
-		[DebugCommand.Parameter.new("cfg", DebugCommand.ParameterType.Options, cfgs)]
+		[DebugCommand.Parameter.new("cfg", DebugCommand.ParameterType.Options, cfgs)],
+		"Executes the given cfg file, from top to bottom."
 	)
 	
 	# Open cfg directory
 	DebugConsole.add_command(
 		"open_cfg_dir", 
 		_open_cfg_dir, 
-		self
+		self,
+		[],
+		"Opens the directory where cfg files are can be put to execute. If the directory does not exist, it will be created."
 	)
 	
 	var monitors = DebugConsole.get_console().monitors.keys()
@@ -58,7 +65,19 @@ func init():
 		[
 			DebugCommand.Parameter.new("monitor", DebugCommand.ParameterType.Options, monitors),
 			DebugCommand.Parameter.new("visible", DebugCommand.ParameterType.Bool)
-		]
+		],
+		"Sets whether a particular stat monitor is visible."
+	)
+	
+	var commands = DebugConsole.get_console().commands.keys()
+	commands.sort()
+	# Help
+	DebugConsole.add_command(
+		"help",
+		_help,
+		self,
+		[DebugCommand.Parameter.new("command", DebugCommand.ParameterType.Options, commands)],
+		"Use to get help on any particular command."
 	)
 
 func list_files_in_directory(path):
@@ -107,3 +126,7 @@ func _exec(file):
 
 func _open_cfg_dir():
 	OS.shell_open(ProjectSettings.globalize_path("user://cfg"))
+
+func _help(command):
+	var helpText = DebugConsole.get_console().commands[command].helpText
+	DebugConsole.log(command + " - " + (helpText if helpText != "" else "There is no help available."))
