@@ -20,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Command hints are now clickable.
 - Renamed `show_log` to `show_mini_log`.
 - Renamed `show_monitor` to `set_monitor_visible`.
-- The `add_command`, `add_command_setvar` and `DebugCommand.new` all now take a string `helpText` parameter. This is what shows up when using the `help` command.
+- The `add_command`, `add_command_setvar` and `DebugCommand.new` functions all now take a string `helpText` parameter. This is what shows up when using the `help` command.
   - ***Please note that updating may cause some errors. The `helpText` parameter comes before `get_function` as it will most likely be used more. All you need to do is add empty quotes or your help message before the `getFunction` parameter.***
 
 ### Fixed
@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed unnecessary commented out code.
+- The `icon.png` file is no longer part of the downloaded plugin.
 
 ## [1.1.1](https://github.com/Ratamacue9112/CopperDC/tree/v1.1.1) (2024-01-08)
 
