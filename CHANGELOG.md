@@ -5,11 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0](https://github.com/Ratamacue9112/CopperDC/tree/v1.2.0) (2024-08-09)
+
+### Added
+- Added the `remove_command` and `remove_commands` functions.
+- Added command history with up and down navigation.
+- Added the `is_console_visible` function.
+- Added the `set_pause_on_open` function.
+- Added the `open_cfg_dir` command.
+- Added the `help` command.
+
+### Changed
+- The console now automatically resizes.
+- Command hints are now clickable.
+- Renamed `show_log` to `show_mini_log`.
+- Renamed `show_monitor` to `set_monitor_visible`.
+- The `add_command`, `add_command_setvar` and `DebugCommand.new` all now take a string `helpText` parameter. This is what shows up when using the `help` command.
+  - ***Please note that updating may cause some errors. The `helpText` parameter comes before `get_function` as it will most likely be used more. All you need to do is add empty quotes or your help message before the `getFunction` parameter.***
+
+### Fixed
+- Fixed bool parameter type not working.
+- Fixed log not wrapping on long messages.
+
+### Removed
+- Removed unnecessary commented out code.
+
 ## [1.1.1](https://github.com/Ratamacue9112/CopperDC/tree/v1.1.1) (2024-01-08)
 
 ### Changed
 - Put plugin inside an `addons` folder.
-- Added an icon. This is hidden in Godot.
 - Sorted the main `debug_console.gd` script with code regions.
 
 ### Removed
