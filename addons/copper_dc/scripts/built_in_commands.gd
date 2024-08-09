@@ -53,7 +53,7 @@ func init():
 		_open_cfg_dir, 
 		self,
 		[],
-		"Opens the directory where cfg files are can be put to execute. If the directory does not exist, it will be created."
+		"Opens the directory where cfg files are put, if it exists."
 	)
 	
 	var monitors = DebugConsole.get_console().monitors.keys()
