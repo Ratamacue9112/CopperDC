@@ -279,9 +279,11 @@ func process_command(command):
 		# Bool parameter
 		elif currentParameterObj.type == DebugCommand.ParameterType.Bool:
 			var value = commandSplit[i].to_lower()
-			if value != "true" and value != "false":
-				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be an bool, but an incorrect value was passed.")
+			var options = {true: ["true", "on", "1"], false: ["false", "off", "0"]}
+			if value not in options[true] and value not in options[false]:
+				DebugConsole.log_error("Parameter " + currentParameterObj.name + " should be a bool, but an incorrect value was passed.")
 				return
+			value = "true" if value in options[true] else "false"
 			commandFunction += value + ","
 			currentParameter += 1
 		# Options parameter
