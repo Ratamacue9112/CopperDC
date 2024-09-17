@@ -204,8 +204,10 @@ func _get_parameter_text(command, currentParameter=-1) -> String:
 	return text
 
 func process_command(command):
-	history.append(command)
-	current_history = history.size()
+	# Avoid duplicating history entries
+	if history.is_empty() or command != history[-1]:
+		history.append(command)
+		current_history = history.size()
 	# Splits command
 	var commandSplit = command.split(" ")
 	# Checks if command is valid
