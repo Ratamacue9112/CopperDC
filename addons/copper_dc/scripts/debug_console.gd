@@ -123,6 +123,42 @@ func _input(event):
 			current_history = history.size()
 			await get_tree().process_frame
 			commandField.set_caret_column(commandField.text.length())
+	# Tab completion
+	elif consolePanel.visible and _is_tab_press(event):
+		_attempt_autocompletion()
+
+func _is_tab_press(event: InputEvent):
+	if event is not InputEventKey:
+		return false
+	var key_event := event as InputEventKey
+	return key_event.keycode == KEY_TAB and key_event.pressed and not key_event.echo
+	
+func _attempt_autocompletion():
+	# Populate the hints label with words we could autocomplete
+	_on_command_field_text_changed(commandField.text)
+	# Gather the first word of each hint, stripping the [url] wrappers
+	var hints = []
+	for hint in commandHintsLabel.text.split("\n"):
+		hints.append(hint.get_slice(']', 1).get_slice('[', 0).get_slice(" ", 0))
+	hints = hints.slice(0, -1)
+	# Find the common prefix to all hints
+	var common_prefix = ""
+	if not hints.is_empty():
+		for i in range(1000):
+			if not hints.all(func(h): return len(h) > i and h[i] == hints[0][i]):
+				break
+			common_prefix += hints[0][i]
+	if not commandHintsLabel.visible or common_prefix == '':
+		return
+	if len(hints) == 1:
+		common_prefix += ' ' # Only one hint, so complete the whole word
+	# Replace the last word, if any, with `common_prefix`
+	var r = RegEx.new()
+	r.compile(r'(\w+)?$') # "Any non-whitespace characters until the end"
+	var new_text = r.sub(commandField.text, common_prefix)
+	commandField.text = new_text
+	commandField.caret_column = len(new_text)
+	_on_command_field_text_changed(new_text)
 
 func _on_command_field_text_changed(new_text):
 	var commandHints = []
