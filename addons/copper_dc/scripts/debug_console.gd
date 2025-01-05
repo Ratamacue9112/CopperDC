@@ -88,14 +88,14 @@ func _process(delta):
 
 func _input(event):
 	# Open debug
-	if !consolePanel.visible and event.is_action_pressed("open_debug"):
+	if !consolePanel.visible and (event.is_action_pressed("open_debug") or event.is_action_pressed("toggle_debug")):
 		show_console()
 		_on_command_field_text_changed(commandField.text)
 		# This is stupid but it works
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
 	# Close debug
-	elif consolePanel.visible and event.is_action_pressed("ui_cancel"):
+	elif consolePanel.visible and (event.is_action_pressed("ui_cancel") or event.is_action_pressed("toggle_debug")):
 		hide_console(showStats, showMiniLog)
 	# Enter command
 	elif consolePanel.visible and event.is_action_pressed("ui_text_submit"):
