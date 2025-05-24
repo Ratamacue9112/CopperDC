@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bcs4bvx7fi2hm"]
 
-[ext_resource type="Script" path="res://addons/copper_dc/scripts/debug_console.gd" id="1_fs6bc"]
+[ext_resource type="Script" uid="uid://dsnk505jx6xy5" path="res://addons/copper_dc/scripts/debug_console.gd" id="1_fs6bc"]
 
 [node name="Debug Console" type="CanvasLayer"]
 process_mode = 3
