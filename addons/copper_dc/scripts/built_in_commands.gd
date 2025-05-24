@@ -125,6 +125,8 @@ func _exec(file):
 	DebugConsole.log("File " + file + ".cfg ran " + str(commandCount) + " commands.")
 
 func _open_cfg_dir():
+	if not DirAccess.dir_exists_absolute("user://cfg"):
+		DirAccess.make_dir_absolute("user://cfg")
 	OS.shell_open(ProjectSettings.globalize_path("user://cfg"))
 
 func _help(command):
