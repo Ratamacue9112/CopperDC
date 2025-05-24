@@ -15,6 +15,7 @@ class Monitor:
 
 var consoleLog = []
 var commands = {}
+var command_binds = {}
 var monitors = {}
 var history = []
 var current_history = -1
@@ -126,6 +127,15 @@ func _input(event):
 	# Tab completion
 	elif consolePanel.visible and _is_tab_press(event):
 		_attempt_autocompletion()
+	# Command keybinds
+	else:
+		for bind in command_binds.keys():
+			var all_keys_pressed = true
+			for key in command_binds[bind]:
+				if not Input.is_key_pressed(key):
+					all_keys_pressed = false
+			if all_keys_pressed:
+				process_command(bind)
 
 func _is_tab_press(event: InputEvent):
 	if event is not InputEventKey:
@@ -388,6 +398,9 @@ static func add_command_setvar(id:String, function:Callable, functionInstance:Ob
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
+
+static func bind_command(command:String, keycode:Key):
+	get_console().command_binds[command] = [keycode]
 #endregion
 
 #region Removing commands
