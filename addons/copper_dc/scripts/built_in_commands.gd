@@ -33,9 +33,9 @@ func init():
 	# Exec
 	var cfgs = []
 	for file in list_files_in_directory("user://cfg"):
-		var fileSplit = file.split(".")
-		if fileSplit[-1] == "cfg":
-			cfgs.append(fileSplit[0])
+		var file_split = file.split(".")
+		if file_split[-1] == "cfg":
+			cfgs.append(file_split[0])
 	
 	var autoexec = FileAccess.open("user://cfg/autoexec.cfg", FileAccess.READ)
 	if autoexec != null: _exec("autoexec")
@@ -100,29 +100,29 @@ func list_files_in_directory(path):
 
 func _show_stats(value):
 	var console = DebugConsole.get_console()
-	console.showStats = value
+	console.show_stats = value
 	console.stats.visible = true
 	
 func _get_stats_shown():
-	return DebugConsole.get_console().showStats
+	return DebugConsole.get_console().show_stats
 
 func _show_log(value):
 	var console = DebugConsole.get_console()
-	console.showMiniLog = value
-	if !console.commandField.visible:
-		console.miniLog.visible = true
+	console.show_mini_log = value
+	if !console.command_field.visible:
+		console.mini_log.visible = true
 	
 func _get_log_shown():
-	return DebugConsole.get_console().showMiniLog
+	return DebugConsole.get_console().show_mini_log
 
 func _exec(file):
 	var commands = FileAccess.open("user://cfg/" + file + ".cfg", FileAccess.READ).get_as_text().split("\r\n")
-	var commandCount = 0
+	var command_count = 0
 	for command in commands:
 		if command.replace(" ", "") != "":
 			DebugConsole.get_console().process_command(command)
-			commandCount += 1
-	DebugConsole.log("File " + file + ".cfg ran " + str(commandCount) + " commands.")
+			command_count += 1
+	DebugConsole.log("File " + file + ".cfg ran " + str(command_count) + " commands.")
 
 func _open_cfg_dir():
 	if not DirAccess.dir_exists_absolute("user://cfg"):
@@ -130,5 +130,5 @@ func _open_cfg_dir():
 	OS.shell_open(ProjectSettings.globalize_path("user://cfg"))
 
 func _help(command):
-	var helpText = DebugConsole.get_console().commands[command].helpText
-	DebugConsole.log(command + " - " + (helpText if helpText != "" else "There is no help available."))
+	var help_text = DebugConsole.get_console().commands[command].help_text
+	DebugConsole.log(command + " - " + (help_text if help_text != "" else "There is no help available."))
