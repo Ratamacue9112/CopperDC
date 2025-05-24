@@ -88,6 +88,7 @@ func _process(delta):
 
 func _input(event):
 	var open_debug_pressed = event.is_action_pressed("open_debug") if InputMap.has_action("open_debug") else false
+	var close_debug_pressed = event.is_action_pressed("close_debug") if InputMap.has_action("close_debug") else event.is_action_pressed("ui_cancel")
 	var toggle_debug_pressed = event.is_action_pressed("toggle_debug") if InputMap.has_action("toggle_debug") else false
 	
 	# Open debug
@@ -98,7 +99,7 @@ func _input(event):
 		await get_tree().create_timer(0.02).timeout
 		commandField.grab_focus()
 	# Close debug
-	elif consolePanel.visible and (event.is_action_pressed("ui_cancel") or toggle_debug_pressed):
+	elif consolePanel.visible and (close_debug_pressed or toggle_debug_pressed):
 		hide_console(showStats, showMiniLog)
 	# Enter command
 	elif consolePanel.visible and event.is_action_pressed("ui_text_submit"):
