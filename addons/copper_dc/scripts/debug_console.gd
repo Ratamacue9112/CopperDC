@@ -369,9 +369,26 @@ static func add_command_setvar(id:String, function:Callable, function_instance:O
 
 static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
+#endregion
 
+#region Managing command binds
 static func bind_command(command:String, keycode:Key):
 	get_console().command_binds[command] = [keycode]
+
+static func bind_command_combo(command:String, keycodes:Array[Key]):
+	get_console().command_binds[command] = keycodes
+
+static func remove_bind(keycode:Key):
+	var binds = get_console().command_binds
+	for command in binds:
+		if binds[command][0] == keycode:
+			binds.erase(command)
+
+static func remove_bind_combo(keycodes:Array[Key]):
+	var binds = get_console().command_binds
+	for command in binds:
+		if binds[command] == keycodes:
+			binds.erase(command)
 #endregion
 
 #region Removing commands
