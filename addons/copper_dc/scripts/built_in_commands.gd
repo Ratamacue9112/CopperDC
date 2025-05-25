@@ -10,23 +10,23 @@ func init():
 		"Clears the console."
 	)
 	
-	# Show stats
+	# Keep stats visible
 	DebugConsole.add_command_setvar(
-		"show_stats", 
-		_show_stats, 
+		"keep_stats_visible", 
+		_keep_stats_visible, 
 		self, 
 		DebugCommand.ParameterType.Bool,
-		"Sets whether the stats in the top left is visible.",
+		"Sets whether the stats in the top left are visible when the console is closed.",
 		_get_stats_shown
 	)
 	
-	# Show log
+	# Keep log visible
 	DebugConsole.add_command_setvar(
-		"show_mini_log", 
-		_show_log, 
+		"keep_log_visible", 
+		_keep_log_visible, 
 		self, 
 		DebugCommand.ParameterType.Bool,
-		"Sets whether the mini log in the top right is visible.",
+		"Sets whether the mini log in the top right is visible when the console is closed.",
 		_get_log_shown
 	)
 	
@@ -98,7 +98,7 @@ func list_files_in_directory(path):
 		return files
 	return []
 
-func _show_stats(value):
+func _keep_stats_visible(value):
 	var console = DebugConsole.get_console()
 	console.show_stats = value
 	console.stats.visible = true
@@ -106,7 +106,7 @@ func _show_stats(value):
 func _get_stats_shown():
 	return DebugConsole.get_console().show_stats
 
-func _show_log(value):
+func _keep_log_visible(value):
 	var console = DebugConsole.get_console()
 	console.show_mini_log = value
 	if !console.command_field.visible:
