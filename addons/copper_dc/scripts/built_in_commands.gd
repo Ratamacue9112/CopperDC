@@ -144,10 +144,10 @@ func _help(command):
 
 func _show_all_binds():
 	var binds = DebugConsole.get_console().command_binds
-	for command in DebugConsole.get_console().command_binds:
-		var keys = binds[command]
+	for bind in DebugConsole.get_console().command_binds:
+		var keys = bind.keycodes
 		var key_text = OS.get_keycode_string(keys[0])
 		for i in range(1, keys.size()):
 			key_text += "+" + OS.get_keycode_string(keys[i])
 
-		DebugConsole.log(key_text + "  -  " + "\"" + command + "\"")
+		DebugConsole.log(key_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))

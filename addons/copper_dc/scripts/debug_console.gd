@@ -13,9 +13,19 @@ class Monitor:
 		self.value = value
 		self.visible = visible
 
+class CommandBind:
+	var command: String
+	var keycodes: Array[Key]
+	var help_text: String
+	
+	func _init(command:String, keycodes:Array[Key], help_text:String):
+		self.command = command
+		self.keycodes = keycodes
+		self.help_text = help_text
+
 var console_log = []
 var commands = {}
-var command_binds = {}
+var command_binds = []
 var monitors = {}
 var history = []
 var current_history = -1
@@ -88,6 +98,7 @@ func _process(delta):
 				stats.text += monitor.display_name + ": " + monitor.value + "\n"
 
 func _input(event):
+	#print("call")
 	var open_debug_pressed = event.is_action_pressed("open_debug") if InputMap.has_action("open_debug") else false
 	var close_debug_pressed = event.is_action_pressed("close_debug") if InputMap.has_action("close_debug") else (event.is_action_pressed("ui_cancel") if not InputMap.has_action("toggle_debug") else false)
 	var toggle_debug_pressed = event.is_action_pressed("toggle_debug") if InputMap.has_action("toggle_debug") else false
@@ -133,13 +144,13 @@ func _input(event):
 		_attempt_autocompletion()
 	# Command keybinds
 	else:
-		for bind in command_binds.keys():
+		for bind in command_binds:
 			var all_keys_pressed = true
-			for key in command_binds[bind]:
+			for key in bind.keycodes:
 				if not Input.is_key_pressed(key):
 					all_keys_pressed = false
 			if all_keys_pressed:
-				process_command(bind)
+				process_command(bind.command)
 
 func _on_command_field_text_changed(new_text):
 	var command_hints = []
@@ -372,23 +383,33 @@ static func add_command_obj(command:DebugCommand):
 #endregion
 
 #region Managing command binds
-static func bind_command(command:String, keycode:Key):
-	get_console().command_binds[command] = [keycode]
+static func bind_command(command:String, keycode:Key, help_text:String=""):
+	var binds = get_console().command_binds
+	for bind in binds:
+		if bind.command == command and bind.keycodes == [keycode]:
+			bind.help_text = help_text
+			return
+	binds.append(CommandBind.new(command, [keycode], help_text))
 
-static func bind_command_combo(command:String, keycodes:Array[Key]):
-	get_console().command_binds[command] = keycodes
+static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String=""):
+	var binds = get_console().command_binds
+	for bind in binds:
+		if bind.command == command and bind.keycodes == keycodes:
+			bind.help_text = help_text
+			return
+	binds.append(CommandBind.new(command, keycodes, help_text))
 
 static func remove_bind(keycode:Key):
 	var binds = get_console().command_binds
-	for command in binds:
-		if binds[command][0] == keycode:
-			binds.erase(command)
+	for i in range(binds.size()):
+		if binds[i].keycodes[0] == keycode:
+			binds.remove_at(i)
 
 static func remove_bind_combo(keycodes:Array[Key]):
 	var binds = get_console().command_binds
-	for command in binds:
-		if binds[command] == keycodes:
-			binds.erase(command)
+	for i in range(binds.size()):
+		if binds[i].keycodes == keycodes:
+			binds.remove_at(i)
 #endregion
 
 #region Removing commands
