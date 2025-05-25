@@ -79,6 +79,15 @@ func init():
 		[DebugCommand.Parameter.new("command", DebugCommand.ParameterType.Options, commands)],
 		"Use to get help on any particular command."
 	)
+	
+	# Show all binds
+	DebugConsole.add_command(
+		"show_all_binds",
+		_show_all_binds,
+		self,
+		[],
+		"Use to display all binded commands and their corresponding keys."
+	)
 
 func list_files_in_directory(path):
 	var files = []
@@ -132,3 +141,13 @@ func _open_cfg_dir():
 func _help(command):
 	var help_text = DebugConsole.get_console().commands[command].help_text
 	DebugConsole.log(command + " - " + (help_text if help_text != "" else "There is no help available."))
+
+func _show_all_binds():
+	var binds = DebugConsole.get_console().command_binds
+	for command in DebugConsole.get_console().command_binds:
+		var keys = binds[command]
+		var key_text = OS.get_keycode_string(keys[0])
+		for i in range(1, keys.size()):
+			key_text += "+" + OS.get_keycode_string(keys[i])
+
+		DebugConsole.log(key_text + "  -  " + "\"" + command + "\"")
