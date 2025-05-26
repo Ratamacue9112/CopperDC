@@ -141,15 +141,16 @@ func _input(event):
 	# Tab completion
 	elif console_panel.visible and _is_tab_press(event):
 		_attempt_autocompletion()
+
+func _unhandled_key_input(event):
 	# Command keybinds
-	else:
-		for bind in command_binds:
-			var all_keys_pressed = true
-			for key in bind.keycodes:
-				if not Input.is_key_pressed(key):
-					all_keys_pressed = false
-			if all_keys_pressed:
-				process_command(bind.command)
+	for bind in command_binds:
+		var all_keys_pressed = true
+		for key in bind.keycodes:
+			if not Input.is_key_pressed(key):
+				all_keys_pressed = false
+		if all_keys_pressed:
+			process_command(bind.command)
 
 func _on_command_field_text_changed(new_text):
 	var command_hints = []
