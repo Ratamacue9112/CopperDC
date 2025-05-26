@@ -88,6 +88,18 @@ func init():
 		[],
 		"Use to display all binded commands and their corresponding keys."
 	)
+	
+	# Bind
+	DebugConsole.add_command(
+		"bind",
+		_bind,
+		self,
+		[
+			DebugCommand.Parameter.new("command", DebugCommand.ParameterType.String),
+			DebugCommand.Parameter.new("keys", DebugCommand.ParameterType.String)
+		],
+		"Use to bind a command to a key, or key combination. Use + to seperate keys in a combination (e.g. F+F6)."
+	)
 
 func list_files_in_directory(path):
 	var files = []
@@ -151,3 +163,13 @@ func _show_all_binds():
 			key_text += "+" + OS.get_keycode_string(keys[i])
 
 		DebugConsole.log(key_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))
+
+func _bind(command, keys):
+	var keys_text_split = keys.split("+")
+	var keycodes: Array[Key] = []
+	for key in keys_text_split:
+		var code = OS.find_keycode_from_string(key.replace(" ", "").replace("\t", "").to_upper())
+		if code != KEY_NONE and code != KEY_UNKNOWN:
+			keycodes.append(code)
+	
+	DebugConsole.bind_command_combo(command, keycodes, "")

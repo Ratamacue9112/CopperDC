@@ -98,7 +98,6 @@ func _process(delta):
 				stats.text += monitor.display_name + ": " + monitor.value + "\n"
 
 func _input(event):
-	#print("call")
 	var open_debug_pressed = event.is_action_pressed("open_debug") if InputMap.has_action("open_debug") else false
 	var close_debug_pressed = event.is_action_pressed("close_debug") if InputMap.has_action("close_debug") else (event.is_action_pressed("ui_cancel") if not InputMap.has_action("toggle_debug") else false)
 	var toggle_debug_pressed = event.is_action_pressed("toggle_debug") if InputMap.has_action("toggle_debug") else false
