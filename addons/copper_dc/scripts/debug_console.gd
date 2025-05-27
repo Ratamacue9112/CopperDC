@@ -160,9 +160,11 @@ func _on_command_field_text_changed(new_text):
 		parameter_count -= 2
 		command_hint_header_label.text = _get_parameter_text(commands[command_id], parameter_count)
 		if parameter_count < commands[command_id].parameters.size():
-			var options = commands[command_id].parameters[parameter_count].options
-			if !options.is_empty():
-				for option in options:
+			var parameter = commands[command_id].parameters[parameter_count]
+			if parameter.options_get_function != Callable():
+				parameter.options = parameter.options_get_function.call()
+			if !parameter.options.is_empty():
+				for option in parameter.options:
 					if str(option).begins_with(command_split[command_split.size() - 1]):
 						command_hints_label.text += "[url]" + str(option) + "[/url]\n"
 	else:
