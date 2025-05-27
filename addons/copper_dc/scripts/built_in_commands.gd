@@ -164,7 +164,12 @@ func _bind(command, keys):
 	var keycodes: Array[Key] = []
 	for key in keys_text_split:
 		var code = OS.find_keycode_from_string(key.replace(" ", ""))
-		if code != KEY_NONE and code != KEY_UNKNOWN:
-			keycodes.append(code)
+		if code == KEY_NONE or code == KEY_UNKNOWN:
+			# Accept "control" as well as "ctrl"
+			if key.to_lower() == "control":
+				code = KEY_CTRL
+			else:
+				return
+		keycodes.append(code)
 	
 	DebugConsole.bind_command_combo(command, keycodes, "")
