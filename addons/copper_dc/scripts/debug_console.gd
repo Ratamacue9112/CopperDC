@@ -148,6 +148,7 @@ func _input(event):
 
 func _unhandled_key_input(event):
 	# Command keybinds
+	if not event.is_pressed(): return
 	for bind in command_binds:
 		var all_keys_pressed = true
 		for key in bind.keycodes:
