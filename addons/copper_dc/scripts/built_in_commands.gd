@@ -157,18 +157,13 @@ func _help(command):
 func _show_all_binds():
 	var binds = DebugConsole.get_console().command_binds
 	for bind in DebugConsole.get_console().command_binds:
-		var keys = bind.keycodes
-		var key_text = OS.get_keycode_string(keys[0])
-		for i in range(1, keys.size()):
-			key_text += "+" + OS.get_keycode_string(keys[i])
-
-		DebugConsole.log(key_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))
+		DebugConsole.log(bind.keys_display_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))
 
 func _bind(command, keys):
 	var keys_text_split = keys.split("+")
 	var keycodes: Array[Key] = []
 	for key in keys_text_split:
-		var code = OS.find_keycode_from_string(key.replace(" ", "").replace("\t", "").to_upper())
+		var code = OS.find_keycode_from_string(key.replace(" ", ""))
 		if code != KEY_NONE and code != KEY_UNKNOWN:
 			keycodes.append(code)
 	

@@ -16,11 +16,15 @@ class Monitor:
 class CommandBind:
 	var command: String
 	var keycodes: Array[Key]
+	var keys_display_text: String
 	var help_text: String
 	
 	func _init(command:String, keycodes:Array[Key], help_text:String):
 		self.command = command
 		self.keycodes = keycodes
+		self.keys_display_text = OS.get_keycode_string(keycodes[0])
+		for i in range(1, keycodes.size()):
+			self.keys_display_text += "+" + OS.get_keycode_string(keycodes[i])
 		self.help_text = help_text
 
 var console_log = []
