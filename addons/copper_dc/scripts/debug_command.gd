@@ -19,11 +19,13 @@ class Parameter:
 	var name: String
 	var type: ParameterType
 	var options: Array
+	var options_get_function: Callable
 	
-	func _init(name:String, type:ParameterType, options:Array=[]):
+	func _init(name:String, type:ParameterType, options:Array=[], options_get_function:Callable=Callable()):
 		self.name = name
 		self.type = type
 		self.options = options
+		self.options_get_function = options_get_function
 
 enum ParameterType {
 	Int, Float, String, Bool, Options
