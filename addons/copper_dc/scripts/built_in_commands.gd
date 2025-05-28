@@ -100,6 +100,26 @@ func init():
 		],
 		"Use to bind a command to a key, or key combination. Use + to seperate keys in a combination (e.g. F+F6)."
 	)
+	
+	# Remove bind
+	DebugConsole.add_command(
+		"remove_bind",
+		_remove_bind,
+		self,
+		[
+			DebugCommand.Parameter.new("keys", DebugCommand.ParameterType.Options, [], _get_binds_text)
+		],
+		"Removes all binds attached to the given key or keys."
+	)
+	
+	# Clear custom binds
+	DebugConsole.add_command(
+		"clear_custom_binds",
+		_clear_custom_binds,
+		self,
+		[],
+		"Clears all binds created with the bind command (or created with clearable set to true)."
+	)
 
 func list_files_in_directory(path):
 	var files = []
@@ -172,4 +192,26 @@ func _bind(command, keys):
 				return
 		keycodes.append(code)
 	
-	DebugConsole.bind_command_combo(command, keycodes, "")
+	DebugConsole.bind_command_combo(command, keycodes, "", true)
+
+func _remove_bind(keys):
+	var keys_text_split = keys.split("+")
+	var keycodes: Array[Key] = []
+	for key in keys_text_split:
+		keycodes.append(OS.find_keycode_from_string(key))
+	DebugConsole.remove_bind_combo(keycodes)
+
+func _get_binds_text():
+	var binds_text = []
+	for bind in DebugConsole.get_console().command_binds:
+		binds_text.append(bind.keys_display_text)
+	return binds_text
+
+func _clear_custom_binds():
+	var binds = DebugConsole.get_console().command_binds
+	var count = 0
+	while count < binds.size():
+		if binds[count].clearable:
+			DebugConsole.remove_bind_combo(binds[count].keycodes)
+		else:
+			count += 1

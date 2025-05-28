@@ -18,14 +18,18 @@ class CommandBind:
 	var keycodes: Array[Key]
 	var keys_display_text: String
 	var help_text: String
+	var clearable: bool
 	
-	func _init(command:String, keycodes:Array[Key], help_text:String):
+	func _init(command:String, keycodes:Array[Key], help_text:String="", clearable:bool=false):
 		self.command = command
 		self.keycodes = keycodes
+		
 		self.keys_display_text = OS.get_keycode_string(keycodes[0])
 		for i in range(1, keycodes.size()):
 			self.keys_display_text += "+" + OS.get_keycode_string(keycodes[i])
+		
 		self.help_text = help_text
+		self.clearable = clearable
 
 var console_log = []
 var commands = {}
@@ -390,33 +394,39 @@ static func add_command_obj(command:DebugCommand):
 #endregion
 
 #region Managing command binds
-static func bind_command(command:String, keycode:Key, help_text:String=""):
+static func bind_command(command:String, keycode:Key, help_text:String="", clearable:bool=false):
 	var binds = get_console().command_binds
 	for bind in binds:
 		if bind.command == command and bind.keycodes == [keycode]:
 			bind.help_text = help_text
 			return
-	binds.append(CommandBind.new(command, [keycode], help_text))
+	binds.append(CommandBind.new(command, [keycode], help_text, clearable))
 
-static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String=""):
+static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String="", clearable:bool=false):
 	var binds = get_console().command_binds
 	for bind in binds:
 		if bind.command == command and bind.keycodes == keycodes:
 			bind.help_text = help_text
 			return
-	binds.append(CommandBind.new(command, keycodes, help_text))
+	binds.append(CommandBind.new(command, keycodes, help_text, clearable))
 
 static func remove_bind(keycode:Key):
 	var binds = get_console().command_binds
-	for i in range(binds.size()):
-		if binds[i].keycodes[0] == keycode:
-			binds.remove_at(i)
+	var count = 0
+	while count < binds.size():
+		if binds[count].keycodes[0] == keycode:
+			binds.remove_at(count)
+		else:
+			count += 1
 
 static func remove_bind_combo(keycodes:Array[Key]):
 	var binds = get_console().command_binds
-	for i in range(binds.size()):
-		if binds[i].keycodes == keycodes:
-			binds.remove_at(i)
+	var count = 0
+	while count < binds.size():
+		if binds[count].keycodes == keycodes:
+			binds.remove_at(count)
+		else:
+			count += 1
 #endregion
 
 #region Removing commands
