@@ -176,6 +176,9 @@ func _help(command):
 
 func _show_all_binds():
 	var binds = DebugConsole.get_console().command_binds
+	if binds.size() == 0:
+		DebugConsole.log("No binds have been created.")
+		return
 	for bind in DebugConsole.get_console().command_binds:
 		DebugConsole.log(bind.keys_display_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))
 
@@ -183,12 +186,14 @@ func _bind(command, keys):
 	var keys_text_split = keys.split("+")
 	var keycodes: Array[Key] = []
 	for key in keys_text_split:
-		var code = OS.find_keycode_from_string(key.replace(" ", ""))
+		var key_trimmed = key.replace(" ", "")
+		var code = OS.find_keycode_from_string(key_trimmed)
 		if code == KEY_NONE or code == KEY_UNKNOWN:
 			# Accept "control" as well as "ctrl"
 			if key.to_lower() == "control":
 				code = KEY_CTRL
 			else:
+				DebugConsole.log_error("No such key as \"" + key_trimmed + "\" exists.")
 				return
 		keycodes.append(code)
 	
