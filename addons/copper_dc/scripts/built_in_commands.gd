@@ -180,7 +180,14 @@ func _show_all_binds():
 		DebugConsole.log("No binds have been created.")
 		return
 	for bind in DebugConsole.get_console().command_binds:
-		DebugConsole.log(bind.keys_display_text + "  -  " + ("\"" + bind.command + "\"" if bind.help_text == "" else bind.help_text))
+		var bind_text = bind.keys_display_text + "  -  "
+		for i in range(bind.commands.size()):
+			if i > 0: bind_text += ",  "
+			if bind.commands[i].help_text == "":
+				bind_text += "\"" + bind.commands[i].command + "\""
+			else:
+				bind_text += bind.commands[i].help_text
+		DebugConsole.log(bind_text)
 
 func _bind(command, keys):
 	var keys_text_split = keys.split("+")
@@ -214,9 +221,19 @@ func _get_binds_text():
 
 func _clear_custom_binds():
 	var binds = DebugConsole.get_console().command_binds
-	var count = 0
-	while count < binds.size():
-		if binds[count].clearable:
-			DebugConsole.remove_bind_combo(binds[count].keycodes)
+	var bind_count = 0
+	while bind_count < binds.size():
+		var command_count = 0
+		var bind = binds[bind_count]
+		while command_count < bind.commands.size():
+			var command = bind.commands[command_count]
+			if command.clearable: 
+				bind.remove_command(command.command)
+			else:
+				command_count += 1
+		
+		if bind.commands.size() == 0: 
+			DebugConsole.remove_bind_combo(bind.keycodes)
 		else:
-			count += 1
+			bind_count += 1
+		
