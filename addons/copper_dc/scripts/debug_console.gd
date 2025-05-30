@@ -18,8 +18,8 @@ class Bind:
 	var keycodes: Array[Key]
 	var keys_display_text: String
 	
-	func _init(command:String, keycodes:Array[Key], help_text:String="", clearable:bool=false):
-		self.commands = [BindCommand.new(command, help_text, clearable)]
+	func _init(command:String, keycodes:Array[Key], help_text:String=""):
+		self.commands = [BindCommand.new(command, help_text)]
 		self.keycodes = keycodes
 		
 		self.keys_display_text = OS.get_keycode_string(keycodes[0])
@@ -41,16 +41,15 @@ class Bind:
 class BindCommand:
 	var command: String
 	var help_text: String
-	var clearable: bool
 	
-	func _init(command:String, help_text:String="", clearable:bool=false):
+	func _init(command:String, help_text:String=""):
 		self.command = command
 		self.help_text = help_text
-		self.clearable = clearable
 
 var console_log = []
 var commands = {}
 var command_binds = []
+var original_binds = []
 var monitors = {}
 var history = []
 var current_history = -1
@@ -141,7 +140,7 @@ func _input(event):
 	elif console_panel.visible and event.is_action_pressed("ui_text_submit"):
 		if command_field.text.length() > 0:
 			DebugConsole.log("> " + command_field.text)
-			process_command(command_field.text)
+			process_command(command_field.text, true)
 			command_field.clear()
 	# Back in history
 	elif console_panel.visible and event.is_action_pressed("ui_up"):
@@ -260,7 +259,7 @@ func _get_parameter_text(command:DebugCommand, current_parameter:int=-1) -> Stri
 				text += " === " + str(value)
 	return text
 
-func process_command(command:String):
+func process_command(command:String, from_console:bool=false):
 	# Avoid duplicating history entries
 	if history.is_empty() or command != history[-1]:
 		history.append(command)
@@ -274,6 +273,11 @@ func process_command(command:String):
 	# Keeps track of current parameter being read
 	var command_data = commands[command_split[0]]
 	var current_parameter = 0
+	
+	if not from_console:
+		for parameter in command_data.parameters:
+			if parameter.type == DebugCommand.ParameterType.Options and parameter.options_get_function != Callable():
+				parameter.options = parameter.options_get_function.call()
 	
 	# Checks that function is not lambda
 	if command_data.function.get_method() == "<anonymous lambda>":
@@ -412,25 +416,54 @@ static func add_command_obj(command:DebugCommand):
 #endregion
 
 #region Managing command binds
-static func bind_command(command:String, keycode:Key, help_text:String="", clearable:bool=false):
+static func bind_command(command:String, keycode:Key, help_text:String=""):
 	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
 	for bind in binds:
 		if bind.keycodes == [keycode]:
 			for command_obj in bind.commands:
 				if command_obj.command == command: return
-			bind.commands.append(BindCommand.new(command, help_text, clearable))
+			bind.commands.append(BindCommand.new(command, help_text))
 			return
-	binds.append(Bind.new(command, [keycode], help_text, clearable))
+	for bind in original_binds:
+		if bind.keycodes == [keycode]:
+			for command_obj in bind.commands:
+				if command_obj.command == command: return
+			bind.commands.append(BindCommand.new(command, help_text))
+			return
+	var bind = Bind.new(command, [keycode], help_text)
+	binds.append(bind)
+	original_binds.append(bind)
 
-static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String="", clearable:bool=false):
+static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String=""):
+	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
+	for bind in binds:
+		if bind.keycodes == keycodes:
+			for command_obj in bind.commands:
+				if command_obj.command == command: return
+			bind.commands.append(BindCommand.new(command, help_text))
+			return
+	for bind in original_binds:
+		if bind.keycodes == keycodes:
+			for command_obj in bind.commands:
+				if command_obj.command == command: return
+			bind.commands.append(BindCommand.new(command, help_text))
+			return
+	var bind = Bind.new(command, keycodes, help_text)
+	binds.append(bind)
+	original_binds.append(bind)
+
+func _bind_command_resettable(command:String, keycodes:Array[Key]):
 	var binds = get_console().command_binds
 	for bind in binds:
 		if bind.keycodes == keycodes:
 			for command_obj in bind.commands:
 				if command_obj.command == command: return
-			bind.commands.append(BindCommand.new(command, help_text, clearable))
+			bind.commands.append(BindCommand.new(command))
 			return
-	binds.append(Bind.new(command, keycodes, help_text, clearable))
+	binds.append(Bind.new(command, keycodes))
+	return
 
 static func remove_bind(keycode:Key):
 	var binds = get_console().command_binds
