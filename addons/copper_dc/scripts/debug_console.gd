@@ -57,6 +57,8 @@ var current_history = -1
 var pause_on_open = false
 var show_stats = false
 var show_mini_log = false
+var binds_allowed = true
+var prev_binds_allowed = true
 
 @onready var command_field = %"Command Field"
 @onready var console_panel = %"Console Panel"
@@ -168,6 +170,7 @@ func _input(event):
 
 func _unhandled_key_input(event):
 	# Command keybinds
+	if not binds_allowed: return
 	if not event.is_pressed(): return
 	for bind in command_binds:
 		var all_keys_pressed = true
@@ -478,6 +481,9 @@ static func remove_bind_combo(keycodes:Array[Key]):
 		if binds[i].keycodes == keycodes:
 			binds.remove_at(i)
 			return
+
+static func set_binds_allowed(allowed:bool):
+	get_console().binds_allowed = allowed
 #endregion
 
 #region Removing commands
@@ -559,6 +565,7 @@ static func hide_console(show_stats:bool=false, show_mini_log:bool=false):
 	console.console_panel.visible = false
 	console.stats.visible = show_stats
 	console.mini_log.visible = show_mini_log
+	console.binds_allowed = console.prev_binds_allowed
 	await console.get_tree().create_timer(0.01).timeout
 	console.mini_log.scroll_vertical = console.mini_log_scroll_bar.max_value
 	
@@ -569,6 +576,8 @@ static func show_console():
 	console.console_panel.visible = true
 	console.stats.visible = true
 	console.mini_log.visible = false
+	console.prev_binds_allowed = console.binds_allowed
+	console.binds_allowed = false
 	
 	if console.pause_on_open: console.get_tree().paused = true
 
