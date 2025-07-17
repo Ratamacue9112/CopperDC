@@ -13,8 +13,57 @@ class Monitor:
 		self.value = value
 		self.visible = visible
 
+class Bind:
+	var instructions: Array[BindInstruction]
+	var keycodes: Array[Key]
+	var keys_display_text: String
+	
+	func _init(keycodes:Array[Key]):
+		self.keycodes = keycodes
+		self.keys_display_text = OS.get_keycode_string(keycodes[0])
+		for i in range(1, keycodes.size()):
+			self.keys_display_text += "+" + OS.get_keycode_string(keycodes[i])
+	
+	func find_command(command_string:String) -> BindCommand:
+		for command_obj in instructions:
+			if command_obj.command == command_string:
+				return command_obj
+		return BindCommand.new("")
+	
+	func remove_command(command_string:String):
+		for i in range(instructions.size()):
+			if instructions[i].command == command_string:
+				instructions.remove_at(i)
+				return
+	
+	func copy() -> Bind:
+		var bind = Bind.new(keycodes)
+		bind.instructions = instructions.duplicate(true)
+		return bind
+
+class BindInstruction:
+	var help_text: String
+
+class BindCommand extends BindInstruction:
+	var command: String
+	
+	func _init(command:String, help_text:String=""):
+		self.command = command
+		self.help_text = help_text
+
+class BindFunction extends BindInstruction:
+	var function: Callable
+	var id: String
+	
+	func _init(function:Callable, help_text:String="", id:String=""):
+		self.function = function
+		self.help_text = help_text
+		self.id = id
+
 var console_log = []
 var commands = {}
+var command_binds = []
+var original_binds = []
 var monitors = {}
 var history = []
 var current_history = -1
@@ -22,6 +71,8 @@ var current_history = -1
 var pause_on_open = false
 var show_stats = false
 var show_mini_log = false
+var binds_allowed = true
+var prev_binds_allowed = true
 
 @onready var command_field = %"Command Field"
 @onready var console_panel = %"Console Panel"
@@ -105,7 +156,7 @@ func _input(event):
 	elif console_panel.visible and event.is_action_pressed("ui_text_submit"):
 		if command_field.text.length() > 0:
 			DebugConsole.log("> " + command_field.text)
-			process_command(command_field.text)
+			process_command(command_field.text, true)
 			command_field.clear()
 	# Back in history
 	elif console_panel.visible and event.is_action_pressed("ui_up"):
@@ -130,6 +181,24 @@ func _input(event):
 	# Tab completion
 	elif console_panel.visible and _is_tab_press(event):
 		_attempt_autocompletion()
+
+func _unhandled_key_input(event):
+	# Command keybinds
+	if not binds_allowed: return
+	if not event.is_pressed(): return
+	if event.is_echo(): return
+	
+	for bind in command_binds:
+		var all_keys_pressed = true
+		for key in bind.keycodes:
+			if not Input.is_key_pressed(key):
+				all_keys_pressed = false
+		if all_keys_pressed:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindCommand:
+					process_command(bind_instruction.command)
+				else:
+					bind_instruction.function.call()
 
 func _on_command_field_text_changed(new_text):
 	var command_hints = []
@@ -212,7 +281,7 @@ func _get_parameter_text(command:DebugCommand, current_parameter:int=-1) -> Stri
 				text += " === " + str(value)
 	return text
 
-func process_command(command:String):
+func process_command(command:String, from_console:bool=false):
 	# Avoid duplicating history entries
 	if history.is_empty() or command != history[-1]:
 		history.append(command)
@@ -226,6 +295,11 @@ func process_command(command:String):
 	# Keeps track of current parameter being read
 	var command_data = commands[command_split[0]]
 	var current_parameter = 0
+	
+	if not from_console:
+		for parameter in command_data.parameters:
+			if parameter.type == DebugCommand.ParameterType.Options and parameter.options_get_function != Callable():
+				parameter.options = parameter.options_get_function.call()
 	
 	# Checks that function is not lambda
 	if command_data.function.get_method() == "<anonymous lambda>":
@@ -363,6 +437,127 @@ static func add_command_obj(command:DebugCommand):
 	get_console().commands[command.id] = command
 #endregion
 
+#region Managing binds
+static func bind_command(command:String, keycode:Key, help_text:String=""):
+	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
+	for bind in binds:
+		if bind.keycodes == [keycode]:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindFunction: continue
+				if bind_instruction.command == command: return
+			bind.instructions.append(BindCommand.new(command, help_text))
+			return
+	for bind in original_binds:
+		if bind.keycodes == [keycode]:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindFunction: continue
+				if bind_instruction.command == command: return
+			bind.instructions.append(BindCommand.new(command, help_text))
+			return
+	var bind = Bind.new([keycode])
+	bind.instructions.append(BindCommand.new(command, help_text))
+	binds.append(bind)
+	original_binds.append(bind.copy())
+
+static func bind_command_combo(command:String, keycodes:Array[Key], help_text:String=""):
+	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
+	for bind in binds:
+		if bind.keycodes == keycodes:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindFunction: continue
+				if bind_instruction.command == command: return
+			bind.instructions.append(BindCommand.new(command, help_text))
+			return
+	for bind in original_binds:
+		if bind.keycodes == keycodes:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindFunction: continue
+				if bind_instruction.command == command: return
+			bind.instructions.append(BindCommand.new(command, help_text))
+			return
+	var bind = Bind.new(keycodes)
+	bind.instructions.append(BindCommand.new(command, help_text))
+	binds.append(bind)
+	original_binds.append(bind.copy())
+
+func _bind_command_resettable(command:String, keycodes:Array[Key]):
+	var binds = get_console().command_binds
+	for bind in binds:
+		if bind.keycodes == keycodes:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindFunction: continue
+				if bind_instruction.command == command: return
+			bind.instructions.append(BindCommand.new(command))
+			return
+	var bind = Bind.new(keycodes)
+	bind.instructions.append(BindCommand.new(command))
+	binds.append(bind)
+	return
+
+static func bind_function(function:Callable, keycode:Key, help_text:String="", id:String=""):
+	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
+	for bind in binds:
+		if bind.keycodes == [keycode]:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindCommand: continue
+				if bind_instruction.id == id: return
+			bind.instructions.append(BindFunction.new(function, help_text, id))
+			return
+	for bind in original_binds:
+		if bind.keycodes == [keycode]:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindCommand: continue
+				if bind_instruction.id == id: return
+			bind.instructions.append(BindFunction.new(function, help_text, id))
+			return
+	var bind = Bind.new([keycode])
+	bind.instructions.append(BindFunction.new(function, help_text, id))
+	binds.append(bind)
+	original_binds.append(bind.copy())
+
+static func bind_function_combo(function:Callable, keycodes:Array[Key], help_text:String="", id:String=""):
+	var binds = get_console().command_binds
+	var original_binds = get_console().original_binds
+	for bind in binds:
+		if bind.keycodes == keycodes:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindCommand: continue
+				if bind_instruction.id == id: return
+			bind.instructions.append(BindFunction.new(function, help_text, id))
+			return
+	for bind in original_binds:
+		if bind.keycodes == keycodes:
+			for bind_instruction in bind.instructions:
+				if bind_instruction is BindCommand: continue
+				if bind_instruction.id == id: return
+			bind.instructions.append(BindFunction.new(function, help_text, id))
+			return
+	var bind = Bind.new(keycodes)
+	bind.instructions.append(BindFunction.new(function, help_text, id))
+	binds.append(bind)
+	original_binds.append(bind.copy())
+
+static func remove_bind(keycode:Key):
+	var binds = get_console().command_binds
+	for i in range(binds.size()):
+		if binds[i].keycodes[0] == keycode:
+			binds.remove_at(i)
+			return
+
+static func remove_bind_combo(keycodes:Array[Key]):
+	var binds = get_console().command_binds
+	for i in range(binds.size()):
+		if binds[i].keycodes == keycodes:
+			binds.remove_at(i)
+			return
+
+static func set_binds_allowed(allowed:bool):
+	get_console().binds_allowed = allowed
+#endregion
+
 #region Removing commands
 static func remove_command(id:String) -> bool:
 	return get_console().commands.erase(id)
@@ -442,6 +637,7 @@ static func hide_console(show_stats:bool=false, show_mini_log:bool=false):
 	console.console_panel.visible = false
 	console.stats.visible = show_stats
 	console.mini_log.visible = show_mini_log
+	console.binds_allowed = console.prev_binds_allowed
 	await console.get_tree().create_timer(0.01).timeout
 	console.mini_log.scroll_vertical = console.mini_log_scroll_bar.max_value
 	
@@ -452,6 +648,8 @@ static func show_console():
 	console.console_panel.visible = true
 	console.stats.visible = true
 	console.mini_log.visible = false
+	console.prev_binds_allowed = console.binds_allowed
+	console.binds_allowed = false
 	
 	if console.pause_on_open: console.get_tree().paused = true
 
