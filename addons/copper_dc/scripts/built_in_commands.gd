@@ -188,12 +188,16 @@ func _show_all_binds():
 		return
 	for bind in DebugConsole.get_console().command_binds:
 		var bind_text = bind.keys_display_text + "  -  "
-		for i in range(bind.commands.size()):
+		for i in range(bind.instructions.size()):
 			if i > 0: bind_text += ",  "
-			if bind.commands[i].help_text == "":
-				bind_text += "\"" + bind.commands[i].command + "\""
+			var bind_instruction = bind.instructions[i]
+			if bind_instruction.help_text == "":
+				if bind_instruction is DebugConsole.BindCommand:
+					bind_text += "\"" + bind.instructions[i].command + "\""
+				else:
+					bind_text += "Undescribed function"
 			else:
-				bind_text += bind.commands[i].help_text
+				bind_text += bind.instructions[i].help_text
 		DebugConsole.log(bind_text)
 
 func _bind(command, keys):
@@ -243,7 +247,7 @@ func _remove_bind(keys):
 			bind = i
 	
 	var lines = file.get_as_text().split("\n")
-	var commands = bind.commands.duplicate()
+	var commands = bind.instructions.duplicate()
 	var count = 0
 	while count < lines.size():
 		if lines[count].begins_with("bind") and lines[count].to_upper().ends_with(bind.keys_display_text.to_upper()):
@@ -278,7 +282,9 @@ func _get_binds_text():
 
 func _reset_binds():
 	var console = DebugConsole.get_console()
-	console.command_binds = console.original_binds
+	console.command_binds = []
+	for bind in console.original_binds:
+		console.command_binds.append(bind.copy())
 	
 	var path = "user://cfg/_binds.cfg"
 	var file = FileAccess.open(path, FileAccess.WRITE)
